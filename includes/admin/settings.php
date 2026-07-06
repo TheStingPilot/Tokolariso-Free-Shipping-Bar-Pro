@@ -791,6 +791,20 @@ function tokolariso_fsb_settings_page(){
         );
 
         update_option(
+            'tokolariso_fsb_carousel_interval',
+            isset($_POST['carousel_interval'])
+                ? min(
+                    300,
+                    max(
+                        0,
+                        absint($_POST['carousel_interval'])
+                    )
+                )
+                : 30,
+            false
+        );
+
+        update_option(
             'tokolariso_fsb_wpml_source_language',
             'nl',
             false
@@ -891,6 +905,16 @@ function tokolariso_fsb_settings_page(){
         get_option(
             'tokolariso_fsb_debug',
             'no'
+        );
+
+    $carousel_interval =
+        function_exists('tokolariso_fsb_get_carousel_interval_seconds')
+        ? tokolariso_fsb_get_carousel_interval_seconds()
+        : absint(
+            get_option(
+                'tokolariso_fsb_carousel_interval',
+                30
+            )
         );
 
     $rules =
@@ -1338,6 +1362,19 @@ function tokolariso_fsb_settings_page(){
                         <?php checked($debug, 'yes'); ?>
                     >
                     <?php esc_html_e('Debug logging', 'tokolariso'); ?>
+                </label>
+
+                <label class="tokolariso-fsb-interval">
+                    <span><?php esc_html_e('Carouselinterval', 'tokolariso'); ?></span>
+                    <input
+                        type="number"
+                        name="carousel_interval"
+                        value="<?php echo esc_attr($carousel_interval); ?>"
+                        min="0"
+                        max="300"
+                        step="1"
+                    >
+                    <span><?php esc_html_e('seconden', 'tokolariso'); ?></span>
                 </label>
 
                 <button

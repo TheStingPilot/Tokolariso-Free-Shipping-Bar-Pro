@@ -52,6 +52,9 @@ var fsb_ajax = {
 
     debug: <?php echo get_option('tokolariso_fsb_debug', 'no') === 'yes' ? 'true' : 'false'; ?>,
 
+    carousel_interval:
+        <?php echo (int) tokolariso_fsb_get_carousel_interval_seconds(); ?>,
+
     progress_nonce:
         '<?php echo esc_js(wp_create_nonce('tokolariso_fsb_progress')); ?>',
 
@@ -474,6 +477,31 @@ function tokolariso_fsb_get_source_language(){
     return $language ? $language : 'nl';
 } // END function tokolariso_fsb_get_source_language()
 
+function tokolariso_fsb_get_carousel_interval_seconds(){
+
+    $interval =
+        absint(
+            get_option(
+                'tokolariso_fsb_carousel_interval',
+                30
+            )
+        );
+
+    if(
+        $interval <= 0
+    ){
+        return 0;
+    } // END if
+
+    return min(
+        300,
+        max(
+            5,
+            $interval
+        )
+    );
+} // END function tokolariso_fsb_get_carousel_interval_seconds()
+
 function tokolariso_fsb_translate_object_id(
     $id,
     $type,
@@ -784,7 +812,7 @@ function tokolariso_fsb_prepare_upsell_product(
 
     return [
         'id' => $product->get_id(),
-        'name' => $product->get_name(),
+        'name' => tokolariso_fsb_get_carousel_product_name($product),
         'price' => html_entity_decode(
             wp_strip_all_tags(
                 wc_price(
@@ -798,6 +826,53 @@ function tokolariso_fsb_prepare_upsell_product(
         ),
     ];
 } // END function tokolariso_fsb_prepare_upsell_product()
+
+function tokolariso_fsb_get_carousel_product_name(
+    $product
+){
+
+    if(
+        !$product
+    ){
+        return '';
+    } // END if
+
+    $name =
+        wp_strip_all_tags(
+            $product->get_name()
+        );
+
+    if(
+        !$product->is_type('variation')
+    ){
+        return $name;
+    } // END if
+
+    if(
+        !preg_match(
+            '/^(.*?)\s*\((.*)\)\s*-\s*(.+)$/u',
+            $name,
+            $matches
+        )
+    ){
+        return $name;
+    } // END if
+
+    $base_name =
+        trim($matches[1]);
+
+    $variation_label =
+        trim($matches[3]);
+
+    if(
+        $base_name === ''
+        || $variation_label === ''
+    ){
+        return $name;
+    } // END if
+
+    return $base_name . ' (' . $variation_label . ')';
+} // END function tokolariso_fsb_get_carousel_product_name()
 
 function tokolariso_fsb_get_upsells(
     $limit = 15
@@ -3173,6 +3248,15 @@ updateBarHeight();
 const nextButton =
     bar.querySelector('.upsells-arrow.next');
 
+const carouselInterval =
+    Math.max(
+        0,
+        parseInt(
+            fsb_ajax.carousel_interval || 0,
+            10
+        ) || 0
+    );
+
 function updateSlider() {
 
     const cards =
@@ -3211,7 +3295,15 @@ if (
 
     updateSlider();
 
-    prevButton.onclick = function() {
+    if (
+        window.tokolarisoFsbCarouselTimer
+    ) {
+        clearInterval(
+            window.tokolarisoFsbCarouselTimer
+        );
+    } // END if
+
+    function showPreviousUpsells() {
 
         currentIndex = Math.max(
             0,
@@ -3219,9 +3311,9 @@ if (
         );
 
         updateSlider();
-    };
+    } // END function showPreviousUpsells()
 
-    nextButton.onclick = function() {
+    function showNextUpsells() {
 
         const maxIndex =
             Math.max(
@@ -3229,13 +3321,37 @@ if (
                 upsells.length - 3
             );
 
-        currentIndex = Math.min(
-            maxIndex,
-            currentIndex + 1
-        );
+        if (
+            maxIndex <= 0
+        ) {
+            return;
+        } // END if
+
+        currentIndex =
+            currentIndex >= maxIndex
+                ? 0
+                : currentIndex + 1;
 
         updateSlider();
-    };
+    } // END function showNextUpsells()
+
+    prevButton.onclick =
+        showPreviousUpsells;
+
+    nextButton.onclick =
+        showNextUpsells;
+
+    if (
+        carouselInterval > 0
+        &&
+        upsells.length > 3
+    ) {
+        window.tokolarisoFsbCarouselTimer =
+            setInterval(
+                showNextUpsells,
+                carouselInterval * 1000
+            );
+    } // END if
 
 } else {
 

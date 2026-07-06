@@ -3,7 +3,7 @@
  * Plugin Name: Toko Lariso Free Shipping Bar PRO
  * Plugin URI: https://www.tokolariso.nl/
  * Description: Free shipping bar + smart upsells + WooCommerce Blocks support.
- * Version: 1.2.0.20
+ * Version: 1.2.0.21
  * Author: Toko Lariso
  * Text Domain: tokolariso
  */
