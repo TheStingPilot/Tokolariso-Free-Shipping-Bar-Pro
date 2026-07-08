@@ -327,6 +327,8 @@ nl
 
 Rules are stored against source-language IDs. On the frontend, category and product IDs are translated to the current language with WPML filters when WPML is available.
 
+From version 1.2.0.22, existing WPML String Translation records for the `tokolariso` text domain are also synchronized to Dutch (`nl`) as source language in the WordPress admin. This prevents WPML from continuing to show Dutch plugin strings as English source strings after scanning.
+
 ## WCPOS Visibility
 
 The plugin checks POS-only visibility before showing upsell products.
