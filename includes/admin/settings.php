@@ -6,15 +6,15 @@ if (!defined('ABSPATH')) {
 
 add_action(
     'admin_enqueue_scripts',
-    'tokolariso_fsb_admin_assets'
+    'free_shipment_progressbar_admin_assets'
 );
 
-function tokolariso_fsb_admin_assets(
+function free_shipment_progressbar_admin_assets(
     $hook
 ){
 
     if(
-        $hook !== 'woocommerce_page_tokolariso-fsb'
+        $hook !== 'woocommerce_page_free-shipment-progressbar-fsb'
     ){
         return;
     } // END if
@@ -48,20 +48,20 @@ function tokolariso_fsb_admin_assets(
     ){
         wp_enqueue_style('selectWoo');
     } // END if
-} // END function tokolariso_fsb_admin_assets()
+} // END function free_shipment_progressbar_admin_assets()
 
 add_action(
-    'wp_ajax_tokolariso_fsb_search_products',
-    'tokolariso_fsb_search_products'
+    'wp_ajax_free_shipment_progressbar_search_products',
+    'free_shipment_progressbar_search_products'
 );
 
-function tokolariso_fsb_search_products(){
+function free_shipment_progressbar_search_products(){
 
     if(
         !current_user_can('manage_woocommerce')
         ||
         !check_ajax_referer(
-            'tokolariso_fsb_product_search',
+            'free_shipment_progressbar_product_search',
             'security',
             false
         )
@@ -84,7 +84,7 @@ function tokolariso_fsb_search_products(){
     } // END if
 
     $products =
-        tokolariso_fsb_find_products_for_admin($term);
+        free_shipment_progressbar_find_products_for_admin($term);
 
     $results = [];
 
@@ -93,15 +93,15 @@ function tokolariso_fsb_search_products(){
     ){
         $results[] = [
             'id' => $product->get_id(),
-            'text' => tokolariso_fsb_admin_product_label($product),
-            'categories' => tokolariso_fsb_admin_product_categories_for_select($product),
+            'text' => free_shipment_progressbar_admin_product_label($product),
+            'categories' => free_shipment_progressbar_admin_product_categories_for_select($product),
         ];
     } // END foreach
 
     wp_send_json($results);
-} // END function tokolariso_fsb_search_products()
+} // END function free_shipment_progressbar_search_products()
 
-function tokolariso_fsb_admin_product_categories_for_select(
+function free_shipment_progressbar_admin_product_categories_for_select(
     $product
 ){
 
@@ -141,9 +141,9 @@ function tokolariso_fsb_admin_product_categories_for_select(
     } // END foreach
 
     return $categories;
-} // END function tokolariso_fsb_admin_product_categories_for_select()
+} // END function free_shipment_progressbar_admin_product_categories_for_select()
 
-function tokolariso_fsb_admin_product_label(
+function free_shipment_progressbar_admin_product_label(
     $product
 ){
 
@@ -174,9 +174,9 @@ function tokolariso_fsb_admin_product_label(
         ' - ',
         array_filter($parts)
     );
-} // END function tokolariso_fsb_admin_product_label()
+} // END function free_shipment_progressbar_admin_product_label()
 
-function tokolariso_fsb_admin_normalize_search_text(
+function free_shipment_progressbar_admin_normalize_search_text(
     $value
 ){
 
@@ -194,9 +194,9 @@ function tokolariso_fsb_admin_normalize_search_text(
         ' ',
         $value
     );
-} // END function tokolariso_fsb_admin_normalize_search_text()
+} // END function free_shipment_progressbar_admin_normalize_search_text()
 
-function tokolariso_fsb_admin_search_aliases(
+function free_shipment_progressbar_admin_search_aliases(
     $token
 ){
 
@@ -208,9 +208,9 @@ function tokolariso_fsb_admin_search_aliases(
     ];
 
     return $aliases[$token] ?? [$token];
-} // END function tokolariso_fsb_admin_search_aliases()
+} // END function free_shipment_progressbar_admin_search_aliases()
 
-function tokolariso_fsb_admin_product_matches_search(
+function free_shipment_progressbar_admin_product_matches_search(
     $product,
     $search
 ){
@@ -218,7 +218,7 @@ function tokolariso_fsb_admin_product_matches_search(
     $tokens =
         preg_split(
             '/\s+/',
-            tokolariso_fsb_admin_normalize_search_text($search),
+            free_shipment_progressbar_admin_normalize_search_text($search),
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -230,7 +230,7 @@ function tokolariso_fsb_admin_product_matches_search(
     } // END if
 
     $haystack =
-        tokolariso_fsb_admin_normalize_search_text(
+        free_shipment_progressbar_admin_normalize_search_text(
             implode(
                 ' ',
                 [
@@ -247,10 +247,10 @@ function tokolariso_fsb_admin_product_matches_search(
         $matched = false;
 
         foreach(
-            tokolariso_fsb_admin_search_aliases($token) as $alias
+            free_shipment_progressbar_admin_search_aliases($token) as $alias
         ){
             $alias =
-                tokolariso_fsb_admin_normalize_search_text($alias);
+                free_shipment_progressbar_admin_normalize_search_text($alias);
 
             if(
                 $alias === ''
@@ -276,9 +276,9 @@ function tokolariso_fsb_admin_product_matches_search(
     } // END foreach
 
     return true;
-} // END function tokolariso_fsb_admin_product_matches_search()
+} // END function free_shipment_progressbar_admin_product_matches_search()
 
-function tokolariso_fsb_find_products_for_admin(
+function free_shipment_progressbar_find_products_for_admin(
     $search
 ){
 
@@ -323,7 +323,7 @@ function tokolariso_fsb_find_products_for_admin(
     $tokens =
         preg_split(
             '/\s+/',
-            tokolariso_fsb_admin_normalize_search_text($search),
+            free_shipment_progressbar_admin_normalize_search_text($search),
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -332,7 +332,7 @@ function tokolariso_fsb_find_products_for_admin(
         $tokens as $token
     ){
         foreach(
-            tokolariso_fsb_admin_search_aliases($token) as $alias
+            free_shipment_progressbar_admin_search_aliases($token) as $alias
         ){
             $alias =
                 trim($alias);
@@ -363,7 +363,7 @@ function tokolariso_fsb_find_products_for_admin(
     $candidate_ids =
         array_merge(
             $candidate_ids,
-            tokolariso_fsb_admin_find_product_ids_by_tokens(
+            free_shipment_progressbar_admin_find_product_ids_by_tokens(
                 $tokens
             )
         );
@@ -396,12 +396,12 @@ function tokolariso_fsb_find_products_for_admin(
             !$product
             ||
             (
-                function_exists('tokolariso_fsb_is_wcpos_pos_only_product')
+                function_exists('free_shipment_progressbar_is_wcpos_pos_only_product')
                 &&
-                tokolariso_fsb_is_wcpos_pos_only_product($product)
+                free_shipment_progressbar_is_wcpos_pos_only_product($product)
             )
             ||
-            !tokolariso_fsb_admin_product_matches_search($product, $search)
+            !free_shipment_progressbar_admin_product_matches_search($product, $search)
         ){
             continue;
         } // END if
@@ -416,9 +416,9 @@ function tokolariso_fsb_find_products_for_admin(
     } // END foreach
 
     return array_values($products);
-} // END function tokolariso_fsb_find_products_for_admin()
+} // END function free_shipment_progressbar_find_products_for_admin()
 
-function tokolariso_fsb_admin_find_product_ids_by_tokens(
+function free_shipment_progressbar_admin_find_product_ids_by_tokens(
     $tokens
 ){
 
@@ -447,7 +447,7 @@ function tokolariso_fsb_admin_find_product_ids_by_tokens(
         $tokens as $token
     ){
         $aliases =
-            tokolariso_fsb_admin_search_aliases($token);
+            free_shipment_progressbar_admin_search_aliases($token);
 
         $alias_conditions = [];
 
@@ -455,7 +455,7 @@ function tokolariso_fsb_admin_find_product_ids_by_tokens(
             $aliases as $alias
         ){
             $alias =
-                tokolariso_fsb_admin_normalize_search_text($alias);
+                free_shipment_progressbar_admin_normalize_search_text($alias);
 
             if(
                 $alias === ''
@@ -513,16 +513,16 @@ function tokolariso_fsb_admin_find_product_ids_by_tokens(
             )
         )
     );
-} // END function tokolariso_fsb_admin_find_product_ids_by_tokens()
+} // END function free_shipment_progressbar_admin_find_product_ids_by_tokens()
 
-function tokolariso_fsb_admin_parse_ids(
+function free_shipment_progressbar_admin_parse_ids(
     $value
 ){
 
     if(
-        function_exists('tokolariso_fsb_parse_ids')
+        function_exists('free_shipment_progressbar_parse_ids')
     ){
-        return tokolariso_fsb_parse_ids($value);
+        return free_shipment_progressbar_parse_ids($value);
     } // END if
 
     $parts =
@@ -548,26 +548,26 @@ function tokolariso_fsb_admin_parse_ids(
     } // END foreach
 
     return array_values(array_unique($ids));
-} // END function tokolariso_fsb_admin_parse_ids()
+} // END function free_shipment_progressbar_admin_parse_ids()
 
-function tokolariso_fsb_rules_for_export(){
+function free_shipment_progressbar_rules_for_export(){
 
     if(
-        function_exists('tokolariso_fsb_get_upsell_rules')
+        function_exists('free_shipment_progressbar_get_upsell_rules')
     ){
-        return tokolariso_fsb_get_upsell_rules();
+        return free_shipment_progressbar_get_upsell_rules();
     } // END if
 
     $rules =
         get_option(
-            'tokolariso_fsb_upsell_rules',
+            'free_shipment_progressbar_upsell_rules',
             []
         );
 
     return is_array($rules) ? $rules : [];
-} // END function tokolariso_fsb_rules_for_export()
+} // END function free_shipment_progressbar_rules_for_export()
 
-function tokolariso_fsb_get_product_category_terms(){
+function free_shipment_progressbar_get_product_category_terms(){
 
     $terms =
         get_terms([
@@ -585,9 +585,9 @@ function tokolariso_fsb_get_product_category_terms(){
     } // END if
 
     return $terms;
-} // END function tokolariso_fsb_get_product_category_terms()
+} // END function free_shipment_progressbar_get_product_category_terms()
 
-function tokolariso_fsb_render_category_select(
+function free_shipment_progressbar_render_category_select(
     $name,
     $selected_ids,
     $terms
@@ -601,10 +601,10 @@ function tokolariso_fsb_render_category_select(
 
     ?>
     <select
-        class="tokolariso-fsb-select tokolariso-fsb-category-select"
+        class="free-shipment-progressbar-fsb-select free-shipment-progressbar-fsb-category-select"
         name="<?php echo esc_attr($name); ?>[]"
         multiple
-        data-placeholder="<?php esc_attr_e('Kies categorieen...', 'tokolariso'); ?>"
+        data-placeholder="<?php esc_attr_e('Choose categories...', 'free_shipment_progressbar'); ?>"
     >
         <?php foreach($terms as $term) : ?>
             <option
@@ -616,9 +616,9 @@ function tokolariso_fsb_render_category_select(
         <?php endforeach; ?>
     </select>
     <?php
-} // END function tokolariso_fsb_render_category_select()
+} // END function free_shipment_progressbar_render_category_select()
 
-function tokolariso_fsb_render_product_select(
+function free_shipment_progressbar_render_product_select(
     $name,
     $selected_ids
 ){
@@ -631,10 +631,10 @@ function tokolariso_fsb_render_product_select(
 
     ?>
     <select
-        class="tokolariso-fsb-select tokolariso-fsb-product-select"
+        class="free-shipment-progressbar-fsb-select free-shipment-progressbar-fsb-product-select"
         name="<?php echo esc_attr($name); ?>[]"
         multiple
-        data-placeholder="<?php esc_attr_e('Zoek producten...', 'tokolariso'); ?>"
+        data-placeholder="<?php esc_attr_e('Search products...', 'free_shipment_progressbar'); ?>"
     >
         <?php foreach($selected_ids as $product_id) : ?>
             <?php
@@ -651,14 +651,14 @@ function tokolariso_fsb_render_product_select(
                 value="<?php echo esc_attr($product_id); ?>"
                 selected
             >
-                <?php echo esc_html(tokolariso_fsb_admin_product_label($product)); ?>
+                <?php echo esc_html(free_shipment_progressbar_admin_product_label($product)); ?>
             </option>
         <?php endforeach; ?>
     </select>
     <?php
-} // END function tokolariso_fsb_render_product_select()
+} // END function free_shipment_progressbar_render_product_select()
 
-function tokolariso_fsb_render_rule_card(
+function free_shipment_progressbar_render_rule_card(
     $rule,
     $index,
     $terms
@@ -673,20 +673,20 @@ function tokolariso_fsb_render_rule_card(
         : 0;
 
     ?>
-    <section class="tokolariso-fsb-rule" data-rule>
-        <div class="tokolariso-fsb-rule__top">
-            <label class="tokolariso-fsb-toggle">
+    <section class="free-shipment-progressbar-fsb-rule" data-rule>
+        <div class="free-shipment-progressbar-fsb-rule__top">
+            <label class="free-shipment-progressbar-fsb-toggle">
                 <input
                     type="checkbox"
                     name="upsell_rules[<?php echo esc_attr($index); ?>][enabled]"
                     value="1"
                     <?php checked($enabled); ?>
                 >
-                <span><?php esc_html_e('Actief', 'tokolariso'); ?></span>
+                <span><?php esc_html_e('Active', 'free_shipment_progressbar'); ?></span>
             </label>
 
-            <label class="tokolariso-fsb-priority">
-                <span><?php esc_html_e('Prioriteit', 'tokolariso'); ?></span>
+            <label class="free-shipment-progressbar-fsb-priority">
+                <span><?php esc_html_e('Priority', 'free_shipment_progressbar'); ?></span>
                 <input
                     type="number"
                     name="upsell_rules[<?php echo esc_attr($index); ?>][priority]"
@@ -697,20 +697,20 @@ function tokolariso_fsb_render_rule_card(
 
             <button
                 type="button"
-                class="button-link-delete tokolariso-fsb-remove-rule"
+                class="button-link-delete free-shipment-progressbar-fsb-remove-rule"
             >
-                <?php esc_html_e('Regel verwijderen', 'tokolariso'); ?>
+                <?php esc_html_e('Remove rule', 'free_shipment_progressbar'); ?>
             </button>
         </div>
 
-        <div class="tokolariso-fsb-flow">
-            <div class="tokolariso-fsb-panel">
-                <h3><?php esc_html_e('Als dit in de winkelwagen zit', 'tokolariso'); ?></h3>
+        <div class="free-shipment-progressbar-fsb-flow">
+            <div class="free-shipment-progressbar-fsb-panel">
+                <h3><?php esc_html_e('When this is in the cart', 'free_shipment_progressbar'); ?></h3>
 
                 <label>
-                    <span><?php esc_html_e('Broncategorieen', 'tokolariso'); ?></span>
+                    <span><?php esc_html_e('Source categories', 'free_shipment_progressbar'); ?></span>
                     <?php
-                    tokolariso_fsb_render_category_select(
+                    free_shipment_progressbar_render_category_select(
                         'upsell_rules[' . $index . '][source_categories]',
                         $rule['source_categories'] ?? [],
                         $terms
@@ -719,9 +719,9 @@ function tokolariso_fsb_render_rule_card(
                 </label>
 
                 <label>
-                    <span><?php esc_html_e('Bronproducten', 'tokolariso'); ?></span>
+                    <span><?php esc_html_e('Source products', 'free_shipment_progressbar'); ?></span>
                     <?php
-                    tokolariso_fsb_render_product_select(
+                    free_shipment_progressbar_render_product_select(
                         'upsell_rules[' . $index . '][source_products]',
                         $rule['source_products'] ?? []
                     );
@@ -729,15 +729,15 @@ function tokolariso_fsb_render_rule_card(
                 </label>
             </div>
 
-            <div class="tokolariso-fsb-arrow" aria-hidden="true">→</div>
+            <div class="free-shipment-progressbar-fsb-arrow" aria-hidden="true">→</div>
 
-            <div class="tokolariso-fsb-panel">
-                <h3><?php esc_html_e('Toon deze upsells', 'tokolariso'); ?></h3>
+            <div class="free-shipment-progressbar-fsb-panel">
+                <h3><?php esc_html_e('Show these upsells', 'free_shipment_progressbar'); ?></h3>
 
                 <label>
-                    <span><?php esc_html_e('Doelcategorieen', 'tokolariso'); ?></span>
+                    <span><?php esc_html_e('Target categories', 'free_shipment_progressbar'); ?></span>
                     <?php
-                    tokolariso_fsb_render_category_select(
+                    free_shipment_progressbar_render_category_select(
                         'upsell_rules[' . $index . '][target_categories]',
                         $rule['target_categories'] ?? [],
                         $terms
@@ -746,9 +746,9 @@ function tokolariso_fsb_render_rule_card(
                 </label>
 
                 <label>
-                    <span><?php esc_html_e('Doelproducten', 'tokolariso'); ?></span>
+                    <span><?php esc_html_e('Target products', 'free_shipment_progressbar'); ?></span>
                     <?php
-                    tokolariso_fsb_render_product_select(
+                    free_shipment_progressbar_render_product_select(
                         'upsell_rules[' . $index . '][target_products]',
                         $rule['target_products'] ?? []
                     );
@@ -758,15 +758,15 @@ function tokolariso_fsb_render_rule_card(
         </div>
     </section>
     <?php
-} // END function tokolariso_fsb_render_rule_card()
+} // END function free_shipment_progressbar_render_rule_card()
 
-function tokolariso_fsb_settings_page(){
+function free_shipment_progressbar_settings_page(){
 
     if(
         !current_user_can('manage_woocommerce')
     ){
         wp_die(
-            esc_html__('Je hebt geen rechten voor deze pagina.', 'tokolariso')
+            esc_html__('You do not have permission to access this page.', 'free_shipment_progressbar')
         );
     } // END if
 
@@ -775,23 +775,23 @@ function tokolariso_fsb_settings_page(){
 
     if(
         (
-            isset($_POST['tokolariso_save'])
+            isset($_POST['free_shipment_progressbar_save'])
             || isset($_POST['reset_default_rules'])
         )
         && check_admin_referer(
-            'tokolariso_fsb_save_settings',
-            'tokolariso_fsb_nonce'
+            'free_shipment_progressbar_save_settings',
+            'free_shipment_progressbar_nonce'
         )
     ){
         update_option(
-            'tokolariso_fsb_debug',
+            'free_shipment_progressbar_debug',
             isset($_POST['debug_mode'])
                 ? 'yes'
                 : 'no'
         );
 
         update_option(
-            'tokolariso_fsb_carousel_interval',
+            'free_shipment_progressbar_carousel_interval',
             isset($_POST['carousel_interval'])
                 ? min(
                     300,
@@ -805,16 +805,16 @@ function tokolariso_fsb_settings_page(){
         );
 
         update_option(
-            'tokolariso_fsb_wpml_source_language',
-            'nl',
+            'free_shipment_progressbar_wpml_source_language',
+            'en',
             false
         );
 
         if(
             isset($_POST['reset_default_rules'])
         ){
-            delete_option('tokolariso_fsb_upsell_rules');
-            $message = __('Standaard upsellregels hersteld.', 'tokolariso');
+            delete_option('free_shipment_progressbar_upsell_rules');
+            $message = __('Default upsell rules restored.', 'free_shipment_progressbar');
         }elseif(
             !empty($_POST['rules_import'])
         ){
@@ -828,19 +828,19 @@ function tokolariso_fsb_settings_page(){
                 is_array($decoded)
             ){
                 $rules =
-                    function_exists('tokolariso_fsb_normalize_upsell_rules')
-                    ? tokolariso_fsb_normalize_upsell_rules($decoded)
+                    function_exists('free_shipment_progressbar_normalize_upsell_rules')
+                    ? free_shipment_progressbar_normalize_upsell_rules($decoded)
                     : $decoded;
 
                 update_option(
-                    'tokolariso_fsb_upsell_rules',
+                    'free_shipment_progressbar_upsell_rules',
                     $rules,
                     false
                 );
 
-                $message = __('Upsellregels geimporteerd.', 'tokolariso');
+                $message = __('Upsell rules imported.', 'free_shipment_progressbar');
             }else{
-                $message = __('Import mislukt: JSON is ongeldig.', 'tokolariso');
+                $message = __('Import failed: JSON is invalid.', 'free_shipment_progressbar');
                 $message_type = 'error';
             } // END if
         }else{
@@ -866,10 +866,10 @@ function tokolariso_fsb_settings_page(){
                     'priority' => isset($posted_rule['priority'])
                         ? (int) $posted_rule['priority']
                         : 0,
-                    'source_categories' => tokolariso_fsb_admin_parse_ids($posted_rule['source_categories'] ?? []),
-                    'target_categories' => tokolariso_fsb_admin_parse_ids($posted_rule['target_categories'] ?? []),
-                    'source_products' => tokolariso_fsb_admin_parse_ids($posted_rule['source_products'] ?? []),
-                    'target_products' => tokolariso_fsb_admin_parse_ids($posted_rule['target_products'] ?? []),
+                    'source_categories' => free_shipment_progressbar_admin_parse_ids($posted_rule['source_categories'] ?? []),
+                    'target_categories' => free_shipment_progressbar_admin_parse_ids($posted_rule['target_categories'] ?? []),
+                    'source_products' => free_shipment_progressbar_admin_parse_ids($posted_rule['source_products'] ?? []),
+                    'target_products' => free_shipment_progressbar_admin_parse_ids($posted_rule['target_products'] ?? []),
                 ];
 
                 if(
@@ -885,40 +885,40 @@ function tokolariso_fsb_settings_page(){
             } // END foreach
 
             if(
-                function_exists('tokolariso_fsb_normalize_upsell_rules')
+                function_exists('free_shipment_progressbar_normalize_upsell_rules')
             ){
                 $rules =
-                    tokolariso_fsb_normalize_upsell_rules($rules);
+                    free_shipment_progressbar_normalize_upsell_rules($rules);
             } // END if
 
             update_option(
-                'tokolariso_fsb_upsell_rules',
+                'free_shipment_progressbar_upsell_rules',
                 $rules,
                 false
             );
 
-            $message = __('Instellingen opgeslagen.', 'tokolariso');
+            $message = __('Settings saved.', 'free_shipment_progressbar');
         }
     } // END if
 
     $debug =
         get_option(
-            'tokolariso_fsb_debug',
+            'free_shipment_progressbar_debug',
             'no'
         );
 
     $carousel_interval =
-        function_exists('tokolariso_fsb_get_carousel_interval_seconds')
-        ? tokolariso_fsb_get_carousel_interval_seconds()
+        function_exists('free_shipment_progressbar_get_carousel_interval_seconds')
+        ? free_shipment_progressbar_get_carousel_interval_seconds()
         : absint(
             get_option(
-                'tokolariso_fsb_carousel_interval',
+                'free_shipment_progressbar_carousel_interval',
                 30
             )
         );
 
     $rules =
-        tokolariso_fsb_rules_for_export();
+        free_shipment_progressbar_rules_for_export();
 
     if(
         empty($rules)
@@ -936,7 +936,7 @@ function tokolariso_fsb_settings_page(){
     } // END if
 
     $terms =
-        tokolariso_fsb_get_product_category_terms();
+        free_shipment_progressbar_get_product_category_terms();
 
     $export =
         wp_json_encode(
@@ -946,9 +946,9 @@ function tokolariso_fsb_settings_page(){
 
 ?>
 
-<div class="wrap tokolariso-fsb-admin">
+<div class="wrap free-shipment-progressbar-fsb-admin">
 
-    <h1><?php esc_html_e('Toko Lariso Free Shipping Bar PRO', 'tokolariso'); ?></h1>
+    <h1><?php esc_html_e('Free Shipping and Progressbar PRO', 'free_shipment_progressbar'); ?></h1>
 
     <?php if ($message) : ?>
         <div class="notice notice-<?php echo esc_attr($message_type); ?> is-dismissible">
@@ -957,20 +957,20 @@ function tokolariso_fsb_settings_page(){
     <?php endif; ?>
 
     <style>
-        .tokolariso-fsb-admin {
+        .free-shipment-progressbar-fsb-admin {
             max-width: 1280px;
         }
 
-        .tokolariso-fsb-toolbar,
-        .tokolariso-fsb-card,
-        .tokolariso-fsb-rule {
+        .free-shipment-progressbar-fsb-toolbar,
+        .free-shipment-progressbar-fsb-card,
+        .free-shipment-progressbar-fsb-rule {
             background: #fff;
             border: 1px solid #dcdcde;
             border-radius: 8px;
             box-shadow: 0 1px 2px rgba(0,0,0,.04);
         }
 
-        .tokolariso-fsb-toolbar {
+        .free-shipment-progressbar-fsb-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -979,35 +979,35 @@ function tokolariso_fsb_settings_page(){
             margin: 18px 0;
         }
 
-        .tokolariso-fsb-toolbar p,
-        .tokolariso-fsb-card p {
+        .free-shipment-progressbar-fsb-toolbar p,
+        .free-shipment-progressbar-fsb-card p {
             margin: 4px 0 0;
             color: #646970;
         }
 
-        .tokolariso-fsb-actions {
+        .free-shipment-progressbar-fsb-actions {
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .tokolariso-fsb-card {
+        .free-shipment-progressbar-fsb-card {
             padding: 18px;
             margin-top: 20px;
         }
 
-        .tokolariso-fsb-card h2,
-        .tokolariso-fsb-rule h3 {
+        .free-shipment-progressbar-fsb-card h2,
+        .free-shipment-progressbar-fsb-rule h3 {
             margin-top: 0;
         }
 
-        .tokolariso-fsb-rule {
+        .free-shipment-progressbar-fsb-rule {
             margin: 14px 0;
             padding: 16px;
         }
 
-        .tokolariso-fsb-rule__top {
+        .free-shipment-progressbar-fsb-rule__top {
             display: flex;
             align-items: center;
             gap: 18px;
@@ -1015,23 +1015,23 @@ function tokolariso_fsb_settings_page(){
             border-bottom: 1px solid #f0f0f1;
         }
 
-        .tokolariso-fsb-toggle,
-        .tokolariso-fsb-priority {
+        .free-shipment-progressbar-fsb-toggle,
+        .free-shipment-progressbar-fsb-priority {
             display: flex;
             align-items: center;
             gap: 8px;
             font-weight: 600;
         }
 
-        .tokolariso-fsb-priority input {
+        .free-shipment-progressbar-fsb-priority input {
             width: 90px;
         }
 
-        .tokolariso-fsb-remove-rule {
+        .free-shipment-progressbar-fsb-remove-rule {
             margin-left: auto;
         }
 
-        .tokolariso-fsb-flow {
+        .free-shipment-progressbar-fsb-flow {
             display: grid;
             grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
             gap: 16px;
@@ -1039,7 +1039,7 @@ function tokolariso_fsb_settings_page(){
             margin-top: 16px;
         }
 
-        .tokolariso-fsb-panel {
+        .free-shipment-progressbar-fsb-panel {
             background: #f6f7f7;
             border: 1px solid #e5e5e5;
             border-radius: 8px;
@@ -1047,40 +1047,40 @@ function tokolariso_fsb_settings_page(){
             position: relative;
         }
 
-        .tokolariso-fsb-panel label {
+        .free-shipment-progressbar-fsb-panel label {
             display: block;
             margin-top: 14px;
             font-weight: 600;
         }
 
-        .tokolariso-fsb-panel label > span {
+        .free-shipment-progressbar-fsb-panel label > span {
             display: block;
             margin-bottom: 6px;
         }
 
-        .tokolariso-fsb-select,
-        .tokolariso-fsb-panel .select2,
-        .tokolariso-fsb-panel .selectWoo,
-        .tokolariso-fsb-panel .select2-container,
-        .tokolariso-fsb-panel .selectWoo-container,
-        .tokolariso-fsb-panel .woocommerce-enhanced-select {
+        .free-shipment-progressbar-fsb-select,
+        .free-shipment-progressbar-fsb-panel .select2,
+        .free-shipment-progressbar-fsb-panel .selectWoo,
+        .free-shipment-progressbar-fsb-panel .select2-container,
+        .free-shipment-progressbar-fsb-panel .selectWoo-container,
+        .free-shipment-progressbar-fsb-panel .woocommerce-enhanced-select {
             width: 100% !important;
             max-width: 100%;
         }
 
-        .tokolariso-fsb-panel select.tokolariso-fsb-select {
+        .free-shipment-progressbar-fsb-panel select.free-shipment-progressbar-fsb-select {
             min-height: 74px;
         }
 
-        .tokolariso-fsb-panel .select2-container,
-        .tokolariso-fsb-panel .selectWoo-container {
+        .free-shipment-progressbar-fsb-panel .select2-container,
+        .free-shipment-progressbar-fsb-panel .selectWoo-container {
             display: block;
             min-height: 64px;
         }
 
-        .tokolariso-fsb-panel select.select2-hidden-accessible,
-        .tokolariso-fsb-panel select.enhanced,
-        .tokolariso-fsb-panel select.wc-enhanced-select {
+        .free-shipment-progressbar-fsb-panel select.select2-hidden-accessible,
+        .free-shipment-progressbar-fsb-panel select.enhanced,
+        .free-shipment-progressbar-fsb-panel select.wc-enhanced-select {
             position: absolute !important;
             width: 1px !important;
             height: 1px !important;
@@ -1204,8 +1204,8 @@ function tokolariso_fsb_settings_page(){
             width: 1px !important;
         }
 
-        .tokolariso-fsb-panel .select2-selection--multiple,
-        .tokolariso-fsb-panel .selectWoo-selection--multiple {
+        .free-shipment-progressbar-fsb-panel .select2-selection--multiple,
+        .free-shipment-progressbar-fsb-panel .selectWoo-selection--multiple {
             min-height: 64px !important;
             padding: 6px 8px !important;
             border-color: #8c8f94 !important;
@@ -1214,8 +1214,8 @@ function tokolariso_fsb_settings_page(){
             box-sizing: border-box;
         }
 
-        .tokolariso-fsb-panel .select2-selection__rendered,
-        .tokolariso-fsb-panel .selectWoo-selection__rendered {
+        .free-shipment-progressbar-fsb-panel .select2-selection__rendered,
+        .free-shipment-progressbar-fsb-panel .selectWoo-selection__rendered {
             display: flex !important;
             flex-wrap: wrap !important;
             gap: 6px !important;
@@ -1223,8 +1223,8 @@ function tokolariso_fsb_settings_page(){
             padding: 0 !important;
         }
 
-        .tokolariso-fsb-panel .select2-selection__choice,
-        .tokolariso-fsb-panel .selectWoo-selection__choice {
+        .free-shipment-progressbar-fsb-panel .select2-selection__choice,
+        .free-shipment-progressbar-fsb-panel .selectWoo-selection__choice {
             display: inline-flex !important;
             align-items: center !important;
             gap: 5px !important;
@@ -1239,9 +1239,9 @@ function tokolariso_fsb_settings_page(){
             white-space: normal !important;
         }
 
-        .tokolariso-fsb-panel .select2-selection__choice__remove,
-        .tokolariso-fsb-panel .selectWoo-selection__choice__remove,
-        .tokolariso-fsb-panel .select2-search-choice-close {
+        .free-shipment-progressbar-fsb-panel .select2-selection__choice__remove,
+        .free-shipment-progressbar-fsb-panel .selectWoo-selection__choice__remove,
+        .free-shipment-progressbar-fsb-panel .select2-search-choice-close {
             align-items: center !important;
             background: transparent !important;
             border: 0 !important;
@@ -1263,21 +1263,21 @@ function tokolariso_fsb_settings_page(){
             width: 18px !important;
         }
 
-        .tokolariso-fsb-panel .select2-selection__choice__remove:hover,
-        .tokolariso-fsb-panel .selectWoo-selection__choice__remove:hover,
-        .tokolariso-fsb-panel .select2-search-choice-close:hover {
+        .free-shipment-progressbar-fsb-panel .select2-selection__choice__remove:hover,
+        .free-shipment-progressbar-fsb-panel .selectWoo-selection__choice__remove:hover,
+        .free-shipment-progressbar-fsb-panel .select2-search-choice-close:hover {
             background: #dcdcde !important;
             color: #b32d2e !important;
         }
 
-        .tokolariso-fsb-panel .select2-search--inline,
-        .tokolariso-fsb-panel .selectWoo-search--inline {
+        .free-shipment-progressbar-fsb-panel .select2-search--inline,
+        .free-shipment-progressbar-fsb-panel .selectWoo-search--inline {
             flex: 1 1 240px !important;
             min-width: 220px !important;
         }
 
-        .tokolariso-fsb-panel .select2-search__field,
-        .tokolariso-fsb-panel .selectWoo-search__field {
+        .free-shipment-progressbar-fsb-panel .select2-search__field,
+        .free-shipment-progressbar-fsb-panel .selectWoo-search__field {
             width: 100% !important;
             min-width: 220px !important;
             margin: 3px 0 !important;
@@ -1305,7 +1305,7 @@ function tokolariso_fsb_settings_page(){
             box-shadow: 0 8px 24px rgba(0,0,0,.18);
         }
 
-        .tokolariso-fsb-arrow {
+        .free-shipment-progressbar-fsb-arrow {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1314,30 +1314,30 @@ function tokolariso_fsb_settings_page(){
             font-weight: 700;
         }
 
-        .tokolariso-fsb-import-export {
+        .free-shipment-progressbar-fsb-import-export {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 18px;
         }
 
-        .tokolariso-fsb-admin textarea {
+        .free-shipment-progressbar-fsb-admin textarea {
             min-height: 220px;
         }
 
         @media (max-width: 960px) {
-            .tokolariso-fsb-toolbar,
-            .tokolariso-fsb-rule__top,
-            .tokolariso-fsb-actions {
+            .free-shipment-progressbar-fsb-toolbar,
+            .free-shipment-progressbar-fsb-rule__top,
+            .free-shipment-progressbar-fsb-actions {
                 align-items: flex-start;
                 flex-direction: column;
             }
 
-            .tokolariso-fsb-flow,
-            .tokolariso-fsb-import-export {
+            .free-shipment-progressbar-fsb-flow,
+            .free-shipment-progressbar-fsb-import-export {
                 grid-template-columns: 1fr;
             }
 
-            .tokolariso-fsb-arrow {
+            .free-shipment-progressbar-fsb-arrow {
                 display: none;
             }
         }
@@ -1345,27 +1345,27 @@ function tokolariso_fsb_settings_page(){
 
     <form method="post">
 
-        <?php wp_nonce_field('tokolariso_fsb_save_settings', 'tokolariso_fsb_nonce'); ?>
+        <?php wp_nonce_field('free_shipment_progressbar_save_settings', 'free_shipment_progressbar_nonce'); ?>
 
-        <div class="tokolariso-fsb-toolbar">
+        <div class="free-shipment-progressbar-fsb-toolbar">
             <div>
-                <h2><?php esc_html_e('Upsellregels', 'tokolariso'); ?></h2>
-                <p><?php esc_html_e('Maak regels op basis van categorieen of specifieke producten. Hogere prioriteit wordt eerst getoond.', 'tokolariso'); ?></p>
-                <p><?php esc_html_e('WPML-brontaal voor regels: Nederlands (nl).', 'tokolariso'); ?></p>
+                <h2><?php esc_html_e('Upsell rules', 'free_shipment_progressbar'); ?></h2>
+                <p><?php esc_html_e('Create rules based on categories or specific products. Higher priority is shown first.', 'free_shipment_progressbar'); ?></p>
+                <p><?php esc_html_e('WPML source language for rules: English (en).', 'free_shipment_progressbar'); ?></p>
             </div>
 
-            <div class="tokolariso-fsb-actions">
+            <div class="free-shipment-progressbar-fsb-actions">
                 <label>
                     <input
                         type="checkbox"
                         name="debug_mode"
                         <?php checked($debug, 'yes'); ?>
                     >
-                    <?php esc_html_e('Debug logging', 'tokolariso'); ?>
+                    <?php esc_html_e('Debug logging', 'free_shipment_progressbar'); ?>
                 </label>
 
-                <label class="tokolariso-fsb-interval">
-                    <span><?php esc_html_e('Carouselinterval', 'tokolariso'); ?></span>
+                <label class="free-shipment-progressbar-fsb-interval">
+                    <span><?php esc_html_e('Carousel interval', 'free_shipment_progressbar'); ?></span>
                     <input
                         type="number"
                         name="carousel_interval"
@@ -1374,36 +1374,36 @@ function tokolariso_fsb_settings_page(){
                         max="300"
                         step="1"
                     >
-                    <span><?php esc_html_e('seconden', 'tokolariso'); ?></span>
+                    <span><?php esc_html_e('seconds', 'free_shipment_progressbar'); ?></span>
                 </label>
 
                 <button
                     type="button"
                     class="button"
-                    id="tokolariso-fsb-add-rule"
+                    id="free-shipment-progressbar-fsb-add-rule"
                 >
-                    <?php esc_html_e('Nieuwe regel', 'tokolariso'); ?>
+                    <?php esc_html_e('New rule', 'free_shipment_progressbar'); ?>
                 </button>
 
                 <button
                     class="button button-primary"
                     type="submit"
-                    name="tokolariso_save"
+                    name="free_shipment_progressbar_save"
                     value="1"
                 >
-                    <?php esc_html_e('Opslaan', 'tokolariso'); ?>
+                    <?php esc_html_e('Save', 'free_shipment_progressbar'); ?>
                 </button>
             </div>
         </div>
 
-        <div id="tokolariso-fsb-rules">
+        <div id="free-shipment-progressbar-fsb-rules">
             <?php
             $row_index = 0;
 
             foreach(
                 $rules as $rule
             ){
-                tokolariso_fsb_render_rule_card(
+                free_shipment_progressbar_render_rule_card(
                     $rule,
                     $row_index,
                     $terms
@@ -1414,34 +1414,34 @@ function tokolariso_fsb_settings_page(){
             ?>
         </div>
 
-        <div class="tokolariso-fsb-card">
-            <h2><?php esc_html_e('Import / export', 'tokolariso'); ?></h2>
-            <p><?php esc_html_e('Export bevat dezelfde ID-structuur als eerdere versies. Import vervangt alle huidige regels.', 'tokolariso'); ?></p>
+        <div class="free-shipment-progressbar-fsb-card">
+            <h2><?php esc_html_e('Import / export', 'free_shipment_progressbar'); ?></h2>
+            <p><?php esc_html_e('Export uses the same ID structure as earlier versions. Import replaces all current rules.', 'free_shipment_progressbar'); ?></p>
 
-            <div class="tokolariso-fsb-import-export">
+            <div class="free-shipment-progressbar-fsb-import-export">
                 <label>
-                    <strong><?php esc_html_e('Export', 'tokolariso'); ?></strong>
+                    <strong><?php esc_html_e('Export', 'free_shipment_progressbar'); ?></strong>
                     <textarea readonly class="large-text code"><?php echo esc_textarea($export); ?></textarea>
                 </label>
 
                 <label>
-                    <strong><?php esc_html_e('Import', 'tokolariso'); ?></strong>
+                    <strong><?php esc_html_e('Import', 'free_shipment_progressbar'); ?></strong>
                     <textarea
                         name="rules_import"
                         class="large-text code"
-                        placeholder="<?php esc_attr_e('Plak JSON import hier', 'tokolariso'); ?>"
+                        placeholder="<?php esc_attr_e('Paste JSON import here', 'free_shipment_progressbar'); ?>"
                     ></textarea>
                 </label>
             </div>
 
-            <p class="tokolariso-fsb-actions">
+            <p class="free-shipment-progressbar-fsb-actions">
                 <button
                     class="button"
                     type="submit"
-                    name="tokolariso_save"
+                    name="free_shipment_progressbar_save"
                     value="1"
                 >
-                    <?php esc_html_e('Import uitvoeren', 'tokolariso'); ?>
+                    <?php esc_html_e('Run import', 'free_shipment_progressbar'); ?>
                 </button>
 
                 <button
@@ -1449,18 +1449,18 @@ function tokolariso_fsb_settings_page(){
                     type="submit"
                     name="reset_default_rules"
                     value="1"
-                    onclick="return confirm('<?php echo esc_js(__('Standaard upsellregels herstellen?', 'tokolariso')); ?>');"
+                    onclick="return confirm('<?php echo esc_js(__('Restore default upsell rules?', 'free_shipment_progressbar')); ?>');"
                 >
-                    <?php esc_html_e('Standaardregels herstellen', 'tokolariso'); ?>
+                    <?php esc_html_e('Restore default rules', 'free_shipment_progressbar'); ?>
                 </button>
             </p>
         </div>
 
     </form>
 
-    <template id="tokolariso-fsb-rule-template">
+    <template id="free-shipment-progressbar-fsb-rule-template">
         <?php
-        tokolariso_fsb_render_rule_card(
+        free_shipment_progressbar_render_rule_card(
             [
                 'enabled' => true,
                 'priority' => 0,
@@ -1479,7 +1479,7 @@ function tokolariso_fsb_settings_page(){
     jQuery(function($){
 
         const productSearchNonce =
-            '<?php echo esc_js(wp_create_nonce('tokolariso_fsb_product_search')); ?>';
+            '<?php echo esc_js(wp_create_nonce('free_shipment_progressbar_product_search')); ?>';
 
         let nextIndex =
             <?php echo (int) $row_index; ?>;
@@ -1489,7 +1489,7 @@ function tokolariso_fsb_settings_page(){
             const root =
                 context ? $(context) : $(document);
 
-            root.find('.tokolariso-fsb-select').each(function(){
+            root.find('.free-shipment-progressbar-fsb-select').each(function(){
 
                 const select =
                     $(this);
@@ -1505,13 +1505,13 @@ function tokolariso_fsb_settings_page(){
                 } // END if
 
                 if (
-                    select.hasClass('tokolariso-fsb-product-select')
+                    select.hasClass('free-shipment-progressbar-fsb-product-select')
                 ) {
 
                     const config = {
                         width: '100%',
                         dropdownParent: $(document.body),
-                        placeholder: select.data('placeholder') || '<?php echo esc_js(__('Zoek producten...', 'tokolariso')); ?>',
+                        placeholder: select.data('placeholder') || '<?php echo esc_js(__('Search products...', 'free_shipment_progressbar')); ?>',
                         minimumInputLength: 2,
                         closeOnSelect: false,
                         ajax: {
@@ -1520,7 +1520,7 @@ function tokolariso_fsb_settings_page(){
                             delay: 250,
                             data: function(params) {
                                 return {
-                                    action: 'tokolariso_fsb_search_products',
+                                    action: 'free_shipment_progressbar_search_products',
                                     security: productSearchNonce,
                                     term: params.term || ''
                                 };
@@ -1584,10 +1584,10 @@ function tokolariso_fsb_settings_page(){
             } // END if
 
             const panel =
-                productSelect.closest('.tokolariso-fsb-panel');
+                productSelect.closest('.free-shipment-progressbar-fsb-panel');
 
             const categorySelect =
-                panel.find('.tokolariso-fsb-category-select').first();
+                panel.find('.free-shipment-progressbar-fsb-category-select').first();
 
             if (
                 !categorySelect.length
@@ -1641,7 +1641,7 @@ function tokolariso_fsb_settings_page(){
 
         $(document).on(
             'select2:select selectWoo:select',
-            '.tokolariso-fsb-product-select',
+            '.free-shipment-progressbar-fsb-product-select',
             function(event){
 
                 addProductCategoriesToPanel(
@@ -1653,7 +1653,7 @@ function tokolariso_fsb_settings_page(){
 
         $(document).on(
             'select2-selecting',
-            '.tokolariso-fsb-product-select',
+            '.free-shipment-progressbar-fsb-product-select',
             function(event){
 
                 addProductCategoriesToPanel(
@@ -1663,10 +1663,10 @@ function tokolariso_fsb_settings_page(){
             }
         );
 
-        $('#tokolariso-fsb-add-rule').on('click', function(){
+        $('#free-shipment-progressbar-fsb-add-rule').on('click', function(){
 
             const template =
-                $('#tokolariso-fsb-rule-template')
+                $('#free-shipment-progressbar-fsb-rule-template')
                     .html()
                     .split('__INDEX__')
                     .join(String(nextIndex));
@@ -1674,7 +1674,7 @@ function tokolariso_fsb_settings_page(){
             const node =
                 $(template);
 
-            $('#tokolariso-fsb-rules')
+            $('#free-shipment-progressbar-fsb-rules')
                 .prepend(node);
 
             nextIndex++;
@@ -1693,14 +1693,14 @@ function tokolariso_fsb_settings_page(){
             window.setTimeout(function(){
 
                 node
-                    .find('.tokolariso-fsb-product-select')
+                    .find('.free-shipment-progressbar-fsb-product-select')
                     .first()
                     .trigger('focus');
 
             }, 250);
         });
 
-        $(document).on('click', '.tokolariso-fsb-remove-rule', function(){
+        $(document).on('click', '.free-shipment-progressbar-fsb-remove-rule', function(){
 
             $(this)
                 .closest('[data-rule]')
@@ -1713,4 +1713,4 @@ function tokolariso_fsb_settings_page(){
 
 <?php
 
-} // END function tokolariso_fsb_settings_page()
+} // END function free_shipment_progressbar_settings_page()

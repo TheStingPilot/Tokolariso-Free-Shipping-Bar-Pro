@@ -1,12 +1,12 @@
-# Toko Lariso Free Shipping Bar PRO
+# Free Shipping and Progressbar PRO
 
-Technical documentation for the WooCommerce plugin **Toko Lariso Free Shipping Bar PRO**.
+Technical documentation for the WooCommerce plugin **Free Shipping and Progressbar PRO**.
 
-Current plugin version: `1.2.0.21`
+Current plugin version: `2.0.0`
 
 ## Purpose
 
-This plugin adds a sticky free shipping and upsell bar to the Toko Lariso WooCommerce storefront.
+This plugin adds a sticky free shipping and upsell bar to a WooCommerce storefront.
 
 The plugin has two related frontend responsibilities:
 
@@ -49,8 +49,8 @@ The plugin also adds a WooCommerce admin page where upsell rules can be managed 
 Upload the plugin folder or zip so WordPress sees this structure:
 
 ```text
-wp-content/plugins/tokolariso-free-shipping-bar-pro/
-    tokolariso-free-shipping-bar-pro.php
+wp-content/plugins/free-shipping-and-progressbar-pro/
+    free-shipping-and-progressbar-pro.php
     includes/
         free-shipping-bar.php
         admin/
@@ -59,12 +59,12 @@ wp-content/plugins/tokolariso-free-shipping-bar-pro/
     README.md
 ```
 
-Activate **Toko Lariso Free Shipping Bar PRO** in WordPress Admin > Plugins.
+Activate **Free Shipping and Progressbar PRO** in WordPress Admin > Plugins.
 
 ## File Structure
 
 ```text
-tokolariso-free-shipping-bar-pro.php
+free-shipping-and-progressbar-pro.php
 ```
 
 Main plugin bootstrap. It checks for WooCommerce and loads the admin and frontend modules.
@@ -104,9 +104,9 @@ The plugin uses these important WordPress and WooCommerce hooks:
 - `wp_enqueue_scripts`: patches a known WooCommerce Blocks dependency warning for the Mollie/Inpsyde handle when possible.
 - `wp_ajax_get_free_shipping_progress`: authenticated free shipping and upsell AJAX endpoint.
 - `wp_ajax_nopriv_get_free_shipping_progress`: guest free shipping and upsell AJAX endpoint.
-- `wp_ajax_tokolariso_add_upsell_to_cart`: authenticated add-to-cart endpoint for carousel products.
-- `wp_ajax_nopriv_tokolariso_add_upsell_to_cart`: guest add-to-cart endpoint for carousel products.
-- `wp_ajax_tokolariso_fsb_search_products`: admin product search endpoint.
+- `wp_ajax_free_shipment_progressbar_add_upsell_to_cart`: authenticated add-to-cart endpoint for carousel products.
+- `wp_ajax_nopriv_free_shipment_progressbar_add_upsell_to_cart`: guest add-to-cart endpoint for carousel products.
+- `wp_ajax_free_shipment_progressbar_search_products`: admin product search endpoint.
 - `woocommerce_package_rates`: forces WBSNG shipping rates to free when the free shipping threshold is reached.
 - `woocommerce_store_api_cart_shipping_rates`: adjusts Store API shipping rates for WooCommerce Blocks.
 
@@ -115,25 +115,25 @@ The plugin uses these important WordPress and WooCommerce hooks:
 The plugin stores settings in the WordPress options table:
 
 ```text
-tokolariso_fsb_debug
+free_shipment_progressbar_debug
 ```
 
 `yes` or `no`. Enables debug logging in browser console and selected PHP logging.
 
 ```text
-tokolariso_fsb_wpml_source_language
+free_shipment_progressbar_wpml_source_language
 ```
 
-Currently forced to `nl` from the settings page so WPML treats Dutch as the source language for rules.
+Currently forced to `en` from the settings page so WPML treats English as the source language for rules.
 
 ```text
-tokolariso_fsb_upsell_rules
+free_shipment_progressbar_upsell_rules
 ```
 
 Array of admin-managed upsell rules.
 
 ```text
-tokolariso_fsb_carousel_interval
+free_shipment_progressbar_carousel_interval
 ```
 
 Autoplay interval for the desktop upsell carousel, in seconds. Default is `30`. Set to `0` to disable autoplay. Values above `300` are capped.
@@ -213,7 +213,7 @@ The upsell carousel is shown when the cart contains products and upsell products
 The central function is:
 
 ```php
-tokolariso_get_shipping_data($package = [])
+free_shipment_progressbar_get_shipping_data($package = [])
 ```
 
 It:
@@ -230,7 +230,7 @@ It:
 The function:
 
 ```php
-tokolariso_fsb_get_shipping_saving_amount($package = [])
+free_shipment_progressbar_get_shipping_saving_amount($package = [])
 ```
 
 calculates the lowest paid shipping amount for the detected package using WooCommerce calculated shipping rates. The returned amount includes shipping tax, because the configured shipping method prices are usually stored excluding tax.
@@ -238,18 +238,18 @@ calculates the lowest paid shipping amount for the detected package using WooCom
 The progress message can therefore show:
 
 ```text
-Voeg € X toe voor gratis verzending en bespaar € Y
+Add € X for free shipping and save € Y
 ```
 
 On mobile, the shorter message is:
 
 ```text
-Nog € X tot gratis verzending. Bespaar € Y
+€ X left for free shipping. Save € Y
 ```
 
 ## Product Carousel
 
-The carousel receives products from `tokolariso_fsb_get_upsells()`.
+The carousel receives products from `free_shipment_progressbar_get_upsells()`.
 
 Products are filtered before display:
 
@@ -319,15 +319,15 @@ The plugin includes specific cart counter synchronization for the Sydney/Sydney 
 
 ## WPML Behavior
 
-The admin settings force the source language for rules to Dutch:
+The admin settings force the source language for rules to English:
 
 ```text
-nl
+en
 ```
 
 Rules are stored against source-language IDs. On the frontend, category and product IDs are translated to the current language with WPML filters when WPML is available.
 
-From version 1.2.0.22, existing WPML String Translation records for the `tokolariso` text domain are also synchronized to Dutch (`nl`) as source language in the WordPress admin. This prevents WPML from continuing to show Dutch plugin strings as English source strings after scanning.
+From version 1.2.0.24, existing WPML String Translation records for the `free_shipment_progressbar` text domain are synchronized to English (`en`) as source language in the WordPress admin. This prevents WPML from continuing to treat the plugin strings as Dutch source strings after scanning.
 
 ## WCPOS Visibility
 
@@ -374,8 +374,8 @@ Debug mode should normally be disabled on production.
 The installable zip should contain only:
 
 ```text
-tokolariso-free-shipping-bar-pro/
-    tokolariso-free-shipping-bar-pro.php
+free-shipping-and-progressbar-pro/
+    free-shipping-and-progressbar-pro.php
     includes/
         free-shipping-bar.php
         admin/
@@ -387,6 +387,33 @@ tokolariso-free-shipping-bar-pro/
 Do not include historical zip files inside the installable zip.
 
 ## Changelog
+
+### 2.0.0 - 2026-07-08
+
+- Rebranded the plugin to **Free Shipping and Progressbar PRO**.
+- Replaced plugin function prefixes, AJAX actions, nonces, admin slugs, CSS classes, JS globals, and WPML context with `free_shipment_progressbar` naming.
+- Renamed the main plugin file and package folder to remove the old project-specific plugin slug.
+
+### 1.2.0.25 - 2026-07-08
+
+- Removed the old default category `38` upsell seed rule.
+- Filters the matching legacy empty category `38` default rules out of existing stored upsell settings.
+
+### 1.2.0.24 - 2026-07-08
+
+- Changed the plugin source language to English for WPML.
+- Synchronized existing WPML String Translation records for the `free_shipment_progressbar` text domain to English (`en`) in the WordPress admin.
+- Translated frontend and admin plugin strings from Dutch to English.
+
+### 1.2.0.23 - 2026-07-08
+
+- Fixed WooCommerce Blocks checkout address detection when the visible checkout country changes before a postcode or city is entered.
+- Added fallback reads for the Blocks checkout store, cart customer data, and hyphenated Blocks field IDs such as `shipping-country`.
+- Prevented stale saved checkout addresses from overriding a fresh country selection.
+
+### 1.2.0.22 - 2026-07-08
+
+- Synchronized existing WPML String Translation source-language records for the `free_shipment_progressbar` text domain to Dutch in the WordPress admin.
 
 ### 1.2.0.21 - 2026-07-06
 
@@ -425,7 +452,7 @@ Do not include historical zip files inside the installable zip.
 - Fixed Select2/SelectWoo dropdown positioning in the admin upsell rule editor.
 - Restored body-level dropdown rendering to prevent product search results from appearing at the bottom of the page.
 - Inserted newly created upsell rules at the top of the rules list, directly below the toolbar.
-- Automatically scrolls to a newly created rule so product entry starts near the "Nieuwe regel" button.
+- Automatically scrolls to a newly created rule so product entry starts near the "New rule" button.
 
 ### 1.2.0.15 - 2026-07-04
 
@@ -461,7 +488,7 @@ Do not include historical zip files inside the installable zip.
 ### 1.2.0.10 - 2026-05-20
 
 - Added fallback upsells when no rule-based products are found.
-- Added a shorter mobile progress message: `Nog X tot gratis verzending. Bespaar Y`.
+- Added a shorter mobile progress message: `X left for free shipping. Save Y`.
 - Added automatic font-size fitting for the mobile progress message.
 - Tightened the Sydney mobile header logo limits for narrow screens.
 

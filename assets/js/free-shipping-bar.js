@@ -72,15 +72,15 @@ function normalizeCartAddress(address) {
 function getCartAddressStorageKey() {
 
     return fsb_ajax.is_logged_in
-        ? 'tokolariso_fsb_account_address'
-        : 'tokolariso_fsb_checkout_address';
+        ? 'free_shipment_progressbar_account_address'
+        : 'free_shipment_progressbar_checkout_address';
 } // END function getCartAddressStorageKey()
 
 function cleanupLegacyStoredAddress() {
 
     try {
         window.localStorage
-            ?.removeItem('tokolariso_fsb_cart_address');
+            ?.removeItem('free_shipment_progressbar_cart_address');
     } catch(e) {}
 } // END function cleanupLegacyStoredAddress()
 
@@ -197,7 +197,7 @@ function getCartItemCount(cart) {
     } // END if
 
     const serverCount =
-        Number(window.tokolarisoServerCartCount);
+        Number(window.free_shipment_progressbarServerCartCount);
 
     if (
         !Number.isNaN(serverCount)
@@ -264,7 +264,7 @@ function isCartVisiblyEmpty() {
         document.body.classList.contains('woocommerce-cart')
         &&
         document.body.textContent.includes(
-            'Je winkelwagen is momenteel leeg'
+            'Your cart is currently empty'
         )
     );
 } // END function isCartVisiblyEmpty()
@@ -309,6 +309,248 @@ function getBlocksCartData() {
         return null;
     } // END try
 } // END function getBlocksCartData()
+
+function getBlocksStoreAddress() {
+
+    if (
+        !window.wp
+        ||
+        !wp.data
+        ||
+        !wp.data.select
+    ) {
+        return null;
+    } // END if
+
+    const candidates = [];
+
+    try {
+
+        const checkoutStore =
+            wp.data.select('wc/store/checkout');
+
+        if (checkoutStore) {
+
+            [
+                'getShippingAddress',
+                'getBillingAddress'
+            ].forEach(function(method){
+
+                if (
+                    typeof checkoutStore[method]
+                    === 'function'
+                ) {
+                    candidates.push(
+                        checkoutStore[method]()
+                    );
+                } // END if
+            });
+        } // END if
+    } catch(e) {}
+
+    try {
+
+        const cartStore =
+            wp.data.select('wc/store/cart');
+
+        if (cartStore) {
+
+            if (
+                typeof cartStore.getCartData
+                === 'function'
+            ) {
+
+                const cartData =
+                    cartStore.getCartData();
+
+                candidates.push(
+                    cartData?.shippingAddress,
+                    cartData?.billingAddress
+                );
+            } // END if
+
+            if (
+                typeof cartStore.getCustomerData
+                === 'function'
+            ) {
+
+                const customerData =
+                    cartStore.getCustomerData();
+
+                candidates.push(
+                    customerData?.shippingAddress,
+                    customerData?.billingAddress
+                );
+            } // END if
+        } // END if
+    } catch(e) {}
+
+    for (const candidate of candidates) {
+
+        if (
+            !candidate
+            ||
+            (
+                !candidate.country
+                &&
+                !candidate.postcode
+                &&
+                !candidate.city
+            )
+        ) {
+            continue;
+        } // END if
+
+        const address =
+            normalizeCartAddress(candidate);
+
+        if (
+            address.country
+            ||
+            address.postcode
+            ||
+            address.city
+        ) {
+            return address;
+        } // END if
+    } // END for
+
+    return null;
+} // END function getBlocksStoreAddress()
+
+function normalizeCheckoutCountry(value) {
+
+    const country =
+        String(value || '').trim();
+
+    const normalized =
+        country.toLowerCase();
+
+    const countryMap = {
+        nederland: 'NL',
+        netherlands: 'NL',
+        belgie: 'BE',
+        'belgië': 'BE',
+        belgium: 'BE',
+        belgique: 'BE',
+        deutschland: 'DE',
+        duitsland: 'DE',
+        germany: 'DE',
+        frankrijk: 'FR',
+        france: 'FR'
+    };
+
+    return countryMap[normalized]
+        || country;
+} // END function normalizeCheckoutCountry()
+
+function getCheckoutFieldValue(selectors) {
+
+    const roots = [
+        document.querySelector('.wc-block-checkout'),
+        document.querySelector('.wp-block-woocommerce-checkout'),
+        document.querySelector('form.woocommerce-checkout'),
+        document.body
+    ].filter(Boolean);
+
+    for (const root of roots) {
+
+        for (const selector of selectors) {
+
+            const field =
+                root.querySelector(selector);
+
+            if (!field) {
+                continue;
+            } // END if
+
+            const value =
+                field.value
+                || field.getAttribute('value')
+                || field.selectedOptions?.[0]?.value
+                || field.selectedOptions?.[0]?.textContent
+                || '';
+
+            if (String(value || '').trim()) {
+                return String(value).trim();
+            } // END if
+        } // END for
+    } // END for
+
+    return '';
+} // END function getCheckoutFieldValue()
+
+function getCheckoutDomAddress() {
+
+    const country =
+        normalizeCheckoutCountry(
+            getCheckoutFieldValue([
+                '#shipping-country',
+                '#billing-country',
+                '#shipping_country',
+                '#billing_country',
+                '#calc_shipping_country',
+                '[name="shipping-country"]',
+                '[name="billing-country"]',
+                '[name="shipping_country"]',
+                '[name="billing_country"]',
+                '[name="country"]',
+                '[autocomplete="shipping country"]',
+                '[autocomplete="billing country"]'
+            ])
+        );
+
+    const postcode =
+        getCheckoutFieldValue([
+            '#shipping-postcode',
+            '#billing-postcode',
+            '#shipping_postcode',
+            '#billing_postcode',
+            '#calc_shipping_postcode',
+            '[name="shipping-postcode"]',
+            '[name="billing-postcode"]',
+            '[name="shipping_postcode"]',
+            '[name="billing_postcode"]',
+            '[name="postcode"]',
+            '[autocomplete="shipping postal-code"]',
+            '[autocomplete="billing postal-code"]'
+        ]);
+
+    const city =
+        getCheckoutFieldValue([
+            '#shipping-city',
+            '#billing-city',
+            '#shipping_city',
+            '#billing_city',
+            '#calc_shipping_city',
+            '[name="shipping-city"]',
+            '[name="billing-city"]',
+            '[name="shipping_city"]',
+            '[name="billing_city"]',
+            '[name="city"]',
+            '[autocomplete="shipping address-level2"]',
+            '[autocomplete="billing address-level2"]'
+        ]);
+
+    const address =
+        normalizeCartAddress({
+            country,
+            postcode,
+            city
+        });
+
+    if (
+        country
+        ||
+        postcode
+        ||
+        city
+    ) {
+        return address;
+    } // END if
+
+    return null;
+} // END function getCheckoutDomAddress()
 
 function setCartCounterValue(count) {
 
@@ -986,68 +1228,65 @@ function pickupSelected() {
             Boolean(fsb_ajax.use_customer_address);
         const canUseStoredAddress =
             !useCustomerAddress;
+        let hasFreshCheckoutAddress =
+            false;
 
         /*
          * WooCommerce Blocks
          */
 
-        const cartData =
-            getBlocksCartData();
+        const blocksAddress =
+            getBlocksStoreAddress();
 
-        if (cartData) {
+        if (blocksAddress) {
 
-            try {
+            country =
+                blocksAddress.country || country;
 
-                if (cartData?.shippingAddress) {
+            postcode =
+                blocksAddress.postcode || postcode;
 
-                    country =
-                        cartData.shippingAddress.country || 'NL';
+            city =
+                blocksAddress.city || city;
 
-                    postcode =
-                        cartData.shippingAddress.postcode || '';
-
-                    city =
-                        cartData.shippingAddress.city || '';
-                } // END if
-
-            } catch(e) {}
-        } // END catch
+            hasFreshCheckoutAddress =
+                true;
+        } // END if
 
         /*
-         * Classic fallback
+         * Checkout DOM fallback. WooCommerce Blocks uses hyphenated field
+         * IDs in some themes, while classic checkout uses underscored IDs.
          */
 
         if (
-            !postcode
-            &&
-            !city
-            &&
             !useCustomerAddress
         ) {
 
-            country =
-                document.querySelector('#shipping_country')?.value
-                || document.querySelector('#billing_country')?.value
-                || document.querySelector('#calc_shipping_country')?.value
-                || country;
+            const domAddress =
+                getCheckoutDomAddress();
 
-            postcode =
-                document.querySelector('#shipping_postcode')?.value
-                || document.querySelector('#billing_postcode')?.value
-                || document.querySelector('#calc_shipping_postcode')?.value
-                || '';
+            if (domAddress) {
 
-            city =
-                document.querySelector('#shipping_city')?.value
-                || document.querySelector('#billing_city')?.value
-                || document.querySelector('#calc_shipping_city')?.value
-                || '';
+                country =
+                    domAddress.country || country;
+
+                postcode =
+                    domAddress.postcode || postcode;
+
+                city =
+                    domAddress.city || city;
+
+                hasFreshCheckoutAddress =
+                    true;
+            } // END if
         } // END if
 
         if (
             !postcode
             &&
             !city
+            &&
+            !hasFreshCheckoutAddress
             &&
             canUseStoredAddress
         ) {
@@ -1280,11 +1519,11 @@ if (DEBUG) {
         !Number.isNaN(Number(data.cart_count))
     ) {
 
-        window.tokolarisoServerCartCount =
+        window.free_shipment_progressbarServerCartCount =
             Number(data.cart_count);
 
         setCartCounterValue(
-            window.tokolarisoServerCartCount
+            window.free_shipment_progressbarServerCartCount
         );
     } // END if
 
@@ -1643,7 +1882,7 @@ document.body.addEventListener(
 
         formData.append(
             'action',
-            'tokolariso_add_upsell_to_cart'
+            'free_shipment_progressbar_add_upsell_to_cart'
         );
 
         formData.append(
@@ -1872,9 +2111,9 @@ function getCartDomSignature() {
 
 const cartObserver = new MutationObserver(function(){
 
-    clearTimeout(window.tokolarisoCartTimer);
+    clearTimeout(window.free_shipment_progressbarCartTimer);
 
-    window.tokolarisoCartTimer =
+    window.free_shipment_progressbarCartTimer =
         setTimeout(function(){
 
 const cartSignature =
@@ -1883,12 +2122,12 @@ const cartSignature =
 if (
     cartSignature
     &&
-    cartSignature === window.tokolarisoLastCartDomSignature
+    cartSignature === window.free_shipment_progressbarLastCartDomSignature
 ) {
     return;
 } // END if
 
-window.tokolarisoLastCartDomSignature =
+window.free_shipment_progressbarLastCartDomSignature =
     cartSignature;
 
 if (DEBUG) {
@@ -1956,7 +2195,7 @@ function observeBlocksCartNode() {
         return false;
     } // END if
 
-    window.tokolarisoLastCartDomSignature =
+    window.free_shipment_progressbarLastCartDomSignature =
         getCartDomSignature();
 
     cartObserver.observe(

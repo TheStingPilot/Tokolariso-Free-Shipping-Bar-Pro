@@ -2,7 +2,7 @@
 
 /*
  * FREE SHIPPING BAR
- * TOKO LARISO
+ * FREE SHIPPING AND PROGRESSBAR
  * VERSIE: ZONDAG 10 MEI 2026
  * CSS AANGEPAST 11 MEI 2026
  * v
@@ -50,16 +50,16 @@ var fsb_ajax = {
 
     url: '<?php echo admin_url('admin-ajax.php'); ?>',
 
-    debug: <?php echo get_option('tokolariso_fsb_debug', 'no') === 'yes' ? 'true' : 'false'; ?>,
+    debug: <?php echo get_option('free_shipment_progressbar_debug', 'no') === 'yes' ? 'true' : 'false'; ?>,
 
     carousel_interval:
-        <?php echo (int) tokolariso_fsb_get_carousel_interval_seconds(); ?>,
+        <?php echo (int) free_shipment_progressbar_get_carousel_interval_seconds(); ?>,
 
     progress_nonce:
-        '<?php echo esc_js(wp_create_nonce('tokolariso_fsb_progress')); ?>',
+        '<?php echo esc_js(wp_create_nonce('free_shipment_progressbar_progress')); ?>',
 
     cart_nonce:
-        '<?php echo esc_js(wp_create_nonce('tokolariso_fsb_cart')); ?>',
+        '<?php echo esc_js(wp_create_nonce('free_shipment_progressbar_cart')); ?>',
 
     is_logged_in:
         <?php echo is_user_logged_in() ? 'true' : 'false'; ?>,
@@ -78,12 +78,12 @@ var fsb_ajax = {
 
         add_to_cart:
             '<?php echo esc_js(
-                __('+ Toevoegen', 'tokolariso')
+                __('+ Add', 'free_shipment_progressbar')
             ); ?>',
 
         added:
             '<?php echo esc_js(
-                __('✓ Toegevoegd', 'tokolariso')
+                __('✓ Added', 'free_shipment_progressbar')
             ); ?>'
     }
 };
@@ -93,11 +93,11 @@ var fsb_ajax = {
 
 add_action(
     'wp_enqueue_scripts',
-    'tokolariso_fsb_add_missing_blocks_dependencies',
+    'free_shipment_progressbar_add_missing_blocks_dependencies',
     100
 );
 
-function tokolariso_fsb_add_missing_blocks_dependencies(){
+function free_shipment_progressbar_add_missing_blocks_dependencies(){
 
     /*
      * Mollie/Inpsyde gebruikt in sommige versies wc.wcBlocksData zonder
@@ -148,7 +148,7 @@ function tokolariso_fsb_add_missing_blocks_dependencies(){
             'wc-blocks-data-store';
 
     } // END foreach
-} // END function tokolariso_fsb_add_missing_blocks_dependencies()
+} // END function free_shipment_progressbar_add_missing_blocks_dependencies()
 
 if(
     !function_exists('str_contains')
@@ -162,13 +162,13 @@ if(
     } // END function str_contains()
 } // END if
 
-function tokolariso_fsb_debug_log(
+function free_shipment_progressbar_debug_log(
     $message,
     $context = null
 ){
 
     if(
-        get_option('tokolariso_fsb_debug', 'no') !== 'yes'
+        get_option('free_shipment_progressbar_debug', 'no') !== 'yes'
     ){
         return;
     } // END if
@@ -180,9 +180,9 @@ function tokolariso_fsb_debug_log(
     } // END if
 
     error_log($message);
-} // END function tokolariso_fsb_debug_log()
+} // END function free_shipment_progressbar_debug_log()
 
-function tokolariso_fsb_format_text(
+function free_shipment_progressbar_format_text(
     $template,
     $replacements = []
 ){
@@ -202,9 +202,9 @@ function tokolariso_fsb_format_text(
     } // END foreach
 
     return $formatted;
-} // END function tokolariso_fsb_format_text()
+} // END function free_shipment_progressbar_format_text()
 
-function tokolariso_fsb_safe_sprintf(
+function free_shipment_progressbar_safe_sprintf(
     $template,
     ...$values
 ){
@@ -248,9 +248,9 @@ function tokolariso_fsb_safe_sprintf(
     } // END foreach
 
     return $formatted;
-} // END function tokolariso_fsb_safe_sprintf()
+} // END function free_shipment_progressbar_safe_sprintf()
 
-function tokolariso_fsb_default_upsell_rules(){
+function free_shipment_progressbar_default_upsell_rules(){
 
     return [
         [
@@ -297,7 +297,7 @@ function tokolariso_fsb_default_upsell_rules(){
             'enabled' => true,
             'priority' => 50,
             'source_categories' => [157],
-            'target_categories' => [21,224,2019,19,177,38,1857],
+            'target_categories' => [21,224,2019,19,177,1857],
             'source_products' => [],
             'target_products' => [],
         ],
@@ -310,9 +310,9 @@ function tokolariso_fsb_default_upsell_rules(){
             'target_products' => [],
         ],
     ];
-} // END function tokolariso_fsb_default_upsell_rules()
+} // END function free_shipment_progressbar_default_upsell_rules()
 
-function tokolariso_fsb_parse_ids(
+function free_shipment_progressbar_parse_ids(
     $value
 ){
 
@@ -342,9 +342,9 @@ function tokolariso_fsb_parse_ids(
     } // END foreach
 
     return array_values(array_unique($ids));
-} // END function tokolariso_fsb_parse_ids()
+} // END function free_shipment_progressbar_parse_ids()
 
-function tokolariso_fsb_normalize_upsell_rules(
+function free_shipment_progressbar_normalize_upsell_rules(
     $rules
 ){
 
@@ -365,14 +365,23 @@ function tokolariso_fsb_normalize_upsell_rules(
             continue;
         } // END if
 
-        $normalized[] = [
+        $normalized_rule = [
             'enabled' => !isset($rule['enabled']) || (bool) $rule['enabled'],
             'priority' => isset($rule['priority']) ? (int) $rule['priority'] : 0,
-            'source_categories' => tokolariso_fsb_parse_ids($rule['source_categories'] ?? []),
-            'target_categories' => tokolariso_fsb_parse_ids($rule['target_categories'] ?? []),
-            'source_products' => tokolariso_fsb_parse_ids($rule['source_products'] ?? []),
-            'target_products' => tokolariso_fsb_parse_ids($rule['target_products'] ?? []),
+            'source_categories' => free_shipment_progressbar_parse_ids($rule['source_categories'] ?? []),
+            'target_categories' => free_shipment_progressbar_parse_ids($rule['target_categories'] ?? []),
+            'source_products' => free_shipment_progressbar_parse_ids($rule['source_products'] ?? []),
+            'target_products' => free_shipment_progressbar_parse_ids($rule['target_products'] ?? []),
         ];
+
+        if(
+            free_shipment_progressbar_is_removed_default_rule($normalized_rule)
+        ){
+            continue;
+        } // END if
+
+        $normalized[] =
+            $normalized_rule;
     } // END foreach
 
     usort(
@@ -383,9 +392,53 @@ function tokolariso_fsb_normalize_upsell_rules(
     );
 
     return $normalized;
-} // END function tokolariso_fsb_normalize_upsell_rules()
+} // END function free_shipment_progressbar_normalize_upsell_rules()
 
-function tokolariso_fsb_make_default_rules_bidirectional(
+function free_shipment_progressbar_is_removed_default_rule(
+    $rule
+){
+
+    if(
+        !empty($rule['source_products'])
+        ||
+        !empty($rule['target_products'])
+    ){
+        return false;
+    } // END if
+
+    $source_categories =
+        array_values(
+            array_map(
+                'absint',
+                $rule['source_categories'] ?? []
+            )
+        );
+
+    $target_categories =
+        array_values(
+            array_map(
+                'absint',
+                $rule['target_categories'] ?? []
+            )
+        );
+
+    sort($source_categories);
+    sort($target_categories);
+
+    return (
+        empty($source_categories)
+        &&
+        $target_categories === [38]
+    )
+    ||
+    (
+        $source_categories === [38]
+        &&
+        empty($target_categories)
+    );
+} // END function free_shipment_progressbar_is_removed_default_rule()
+
+function free_shipment_progressbar_make_default_rules_bidirectional(
     $rules
 ){
 
@@ -416,13 +469,13 @@ function tokolariso_fsb_make_default_rules_bidirectional(
         $rules,
         $extra_rules
     );
-} // END function tokolariso_fsb_make_default_rules_bidirectional()
+} // END function free_shipment_progressbar_make_default_rules_bidirectional()
 
-function tokolariso_fsb_get_upsell_rules(){
+function free_shipment_progressbar_get_upsell_rules(){
 
     $rules =
         get_option(
-            'tokolariso_fsb_upsell_rules',
+            'free_shipment_progressbar_upsell_rules',
             null
         );
 
@@ -431,15 +484,15 @@ function tokolariso_fsb_get_upsell_rules(){
         || !is_array($rules)
     ){
         $rules =
-            tokolariso_fsb_make_default_rules_bidirectional(
-                tokolariso_fsb_default_upsell_rules()
+            free_shipment_progressbar_make_default_rules_bidirectional(
+                free_shipment_progressbar_default_upsell_rules()
             );
     } // END if
 
-    return tokolariso_fsb_normalize_upsell_rules($rules);
-} // END function tokolariso_fsb_get_upsell_rules()
+    return free_shipment_progressbar_normalize_upsell_rules($rules);
+} // END function free_shipment_progressbar_get_upsell_rules()
 
-function tokolariso_fsb_get_current_language(){
+function free_shipment_progressbar_get_current_language(){
 
     if(
         has_filter('wpml_current_language')
@@ -457,32 +510,32 @@ function tokolariso_fsb_get_current_language(){
         } // END if
     } // END if
 
-    return tokolariso_fsb_get_source_language();
-} // END function tokolariso_fsb_get_current_language()
+    return free_shipment_progressbar_get_source_language();
+} // END function free_shipment_progressbar_get_current_language()
 
-function tokolariso_fsb_get_source_language(){
+function free_shipment_progressbar_get_source_language(){
 
     $language =
         get_option(
-            'tokolariso_fsb_wpml_source_language',
-            'nl'
+            'free_shipment_progressbar_wpml_source_language',
+            'en'
         );
 
     $language =
         apply_filters(
-            'tokolariso_fsb_wpml_source_language',
+            'free_shipment_progressbar_wpml_source_language',
             $language
         );
 
-    return $language ? $language : 'nl';
-} // END function tokolariso_fsb_get_source_language()
+    return $language ? $language : 'en';
+} // END function free_shipment_progressbar_get_source_language()
 
-function tokolariso_fsb_get_carousel_interval_seconds(){
+function free_shipment_progressbar_get_carousel_interval_seconds(){
 
     $interval =
         absint(
             get_option(
-                'tokolariso_fsb_carousel_interval',
+                'free_shipment_progressbar_carousel_interval',
                 30
             )
         );
@@ -500,9 +553,9 @@ function tokolariso_fsb_get_carousel_interval_seconds(){
             $interval
         )
     );
-} // END function tokolariso_fsb_get_carousel_interval_seconds()
+} // END function free_shipment_progressbar_get_carousel_interval_seconds()
 
-function tokolariso_fsb_translate_object_id(
+function free_shipment_progressbar_translate_object_id(
     $id,
     $type,
     $language
@@ -528,9 +581,9 @@ function tokolariso_fsb_translate_object_id(
     } // END if
 
     return (int) $id;
-} // END function tokolariso_fsb_translate_object_id()
+} // END function free_shipment_progressbar_translate_object_id()
 
-function tokolariso_fsb_id_in_wcpos_list(
+function free_shipment_progressbar_id_in_wcpos_list(
     $value,
     $product_id
 ){
@@ -542,7 +595,7 @@ function tokolariso_fsb_id_in_wcpos_list(
             $value as $item
         ){
             if(
-                tokolariso_fsb_id_in_wcpos_list(
+                free_shipment_progressbar_id_in_wcpos_list(
                     $item,
                     $product_id
                 )
@@ -555,9 +608,9 @@ function tokolariso_fsb_id_in_wcpos_list(
     } // END if
 
     return absint($value) === absint($product_id);
-} // END function tokolariso_fsb_id_in_wcpos_list()
+} // END function free_shipment_progressbar_id_in_wcpos_list()
 
-function tokolariso_fsb_wcpos_visibility_has_pos_only(
+function free_shipment_progressbar_wcpos_visibility_has_pos_only(
     $value,
     $product_id,
     $key_hint = ''
@@ -591,7 +644,7 @@ function tokolariso_fsb_wcpos_visibility_has_pos_only(
             if(
                 strpos($combined_key, 'pos_only') !== false
                 &&
-                tokolariso_fsb_id_in_wcpos_list(
+                free_shipment_progressbar_id_in_wcpos_list(
                     $item,
                     $product_id
                 )
@@ -600,7 +653,7 @@ function tokolariso_fsb_wcpos_visibility_has_pos_only(
             } // END if
 
             if(
-                tokolariso_fsb_wcpos_visibility_has_pos_only(
+                free_shipment_progressbar_wcpos_visibility_has_pos_only(
                     $item,
                     $product_id,
                     $combined_key
@@ -612,9 +665,9 @@ function tokolariso_fsb_wcpos_visibility_has_pos_only(
     } // END if
 
     return false;
-} // END function tokolariso_fsb_wcpos_visibility_has_pos_only()
+} // END function free_shipment_progressbar_wcpos_visibility_has_pos_only()
 
-function tokolariso_fsb_is_wcpos_pos_only_product_id(
+function free_shipment_progressbar_is_wcpos_pos_only_product_id(
     $product_id
 ){
 
@@ -680,13 +733,13 @@ function tokolariso_fsb_is_wcpos_pos_only_product_id(
         return true;
     } // END if
 
-    return tokolariso_fsb_wcpos_visibility_has_pos_only(
+    return free_shipment_progressbar_wcpos_visibility_has_pos_only(
         $visibility_options,
         $product_id
     );
-} // END function tokolariso_fsb_is_wcpos_pos_only_product_id()
+} // END function free_shipment_progressbar_is_wcpos_pos_only_product_id()
 
-function tokolariso_fsb_is_wcpos_pos_only_product(
+function free_shipment_progressbar_is_wcpos_pos_only_product(
     $product
 ){
 
@@ -697,7 +750,7 @@ function tokolariso_fsb_is_wcpos_pos_only_product(
     } // END if
 
     if(
-        tokolariso_fsb_is_wcpos_pos_only_product_id(
+        free_shipment_progressbar_is_wcpos_pos_only_product_id(
             $product->get_id()
         )
     ){
@@ -710,15 +763,15 @@ function tokolariso_fsb_is_wcpos_pos_only_product(
     if(
         $parent_id
         &&
-        tokolariso_fsb_is_wcpos_pos_only_product_id($parent_id)
+        free_shipment_progressbar_is_wcpos_pos_only_product_id($parent_id)
     ){
         return true;
     } // END if
 
     return false;
-} // END function tokolariso_fsb_is_wcpos_pos_only_product()
+} // END function free_shipment_progressbar_is_wcpos_pos_only_product()
 
-function tokolariso_fsb_get_cart_context(){
+function free_shipment_progressbar_get_cart_context(){
 
     $category_ids = [];
     $product_ids = [];
@@ -734,10 +787,10 @@ function tokolariso_fsb_get_cart_context(){
         ){
             $product_ids[] = $product_id;
             $product_ids[] =
-                tokolariso_fsb_translate_object_id(
+                free_shipment_progressbar_translate_object_id(
                     $product_id,
                     'product',
-                    tokolariso_fsb_get_source_language()
+                    free_shipment_progressbar_get_source_language()
                 );
         } // END if
 
@@ -746,10 +799,10 @@ function tokolariso_fsb_get_cart_context(){
         ){
             $product_ids[] = $variation_id;
             $product_ids[] =
-                tokolariso_fsb_translate_object_id(
+                free_shipment_progressbar_translate_object_id(
                     $variation_id,
                     'product_variation',
-                    tokolariso_fsb_get_source_language()
+                    free_shipment_progressbar_get_source_language()
                 );
         } // END if
 
@@ -770,10 +823,10 @@ function tokolariso_fsb_get_cart_context(){
             $terms as $term
         ){
             $category_ids[] =
-                tokolariso_fsb_translate_object_id(
+                free_shipment_progressbar_translate_object_id(
                     $term->term_id,
                     'product_cat',
-                    tokolariso_fsb_get_source_language()
+                    free_shipment_progressbar_get_source_language()
                 );
         } // END foreach
     } // END foreach
@@ -782,15 +835,15 @@ function tokolariso_fsb_get_cart_context(){
         'category_ids' => array_values(array_unique(array_map('absint', $category_ids))),
         'product_ids' => array_values(array_unique(array_map('absint', $product_ids))),
     ];
-} // END function tokolariso_fsb_get_cart_context()
+} // END function free_shipment_progressbar_get_cart_context()
 
-function tokolariso_fsb_prepare_upsell_product(
+function free_shipment_progressbar_prepare_upsell_product(
     $product
 ){
 
     if(
         !$product
-        || tokolariso_fsb_is_wcpos_pos_only_product($product)
+        || free_shipment_progressbar_is_wcpos_pos_only_product($product)
         || !$product->is_in_stock()
         || (float) $product->get_price() <= 0.01
     ){
@@ -812,7 +865,7 @@ function tokolariso_fsb_prepare_upsell_product(
 
     return [
         'id' => $product->get_id(),
-        'name' => tokolariso_fsb_get_carousel_product_name($product),
+        'name' => free_shipment_progressbar_get_carousel_product_name($product),
         'price' => html_entity_decode(
             wp_strip_all_tags(
                 wc_price(
@@ -825,9 +878,9 @@ function tokolariso_fsb_prepare_upsell_product(
             'thumbnail'
         ),
     ];
-} // END function tokolariso_fsb_prepare_upsell_product()
+} // END function free_shipment_progressbar_prepare_upsell_product()
 
-function tokolariso_fsb_get_carousel_product_name(
+function free_shipment_progressbar_get_carousel_product_name(
     $product
 ){
 
@@ -872,9 +925,9 @@ function tokolariso_fsb_get_carousel_product_name(
     } // END if
 
     return $base_name . ' (' . $variation_label . ')';
-} // END function tokolariso_fsb_get_carousel_product_name()
+} // END function free_shipment_progressbar_get_carousel_product_name()
 
-function tokolariso_fsb_get_upsells(
+function free_shipment_progressbar_get_upsells(
     $limit = 15
 ){
 
@@ -893,10 +946,10 @@ function tokolariso_fsb_get_upsells(
     } // END if
 
     $language =
-        tokolariso_fsb_get_current_language();
+        free_shipment_progressbar_get_current_language();
 
     $context =
-        tokolariso_fsb_get_cart_context();
+        free_shipment_progressbar_get_cart_context();
 
     $exclude_ids =
         $context['product_ids'];
@@ -907,7 +960,7 @@ function tokolariso_fsb_get_upsells(
     $category_priority = [];
 
     foreach(
-        tokolariso_fsb_get_upsell_rules() as $rule
+        free_shipment_progressbar_get_upsell_rules() as $rule
     ){
         if(
             empty($rule['enabled'])
@@ -940,7 +993,7 @@ function tokolariso_fsb_get_upsells(
             $rule['target_categories'] as $category_id
         ){
             $translated_id =
-                tokolariso_fsb_translate_object_id(
+                free_shipment_progressbar_translate_object_id(
                     $category_id,
                     'product_cat',
                     $language
@@ -958,7 +1011,7 @@ function tokolariso_fsb_get_upsells(
             $rule['target_products'] as $product_id
         ){
             $translated_id =
-                tokolariso_fsb_translate_object_id(
+                free_shipment_progressbar_translate_object_id(
                     $product_id,
                     'product',
                     $language
@@ -1094,7 +1147,7 @@ function tokolariso_fsb_get_upsells(
                 $terms as $term
             ){
                 $term_id =
-                    tokolariso_fsb_translate_object_id(
+                    free_shipment_progressbar_translate_object_id(
                         $term->term_id,
                         'product_cat',
                         $language
@@ -1163,7 +1216,7 @@ function tokolariso_fsb_get_upsells(
         $products as $product
     ){
         $prepared =
-            tokolariso_fsb_prepare_upsell_product($product);
+            free_shipment_progressbar_prepare_upsell_product($product);
 
         if(
             !$prepared
@@ -1184,16 +1237,16 @@ function tokolariso_fsb_get_upsells(
         empty($upsells)
     ){
         $upsells =
-            tokolariso_fsb_get_fallback_upsells(
+            free_shipment_progressbar_get_fallback_upsells(
                 $limit,
                 $exclude_ids
             );
     } // END if
 
     return $upsells;
-} // END function tokolariso_fsb_get_upsells()
+} // END function free_shipment_progressbar_get_upsells()
 
-function tokolariso_fsb_get_fallback_upsells(
+function free_shipment_progressbar_get_fallback_upsells(
     $limit = 15,
     $exclude_ids = []
 ){
@@ -1233,7 +1286,7 @@ function tokolariso_fsb_get_fallback_upsells(
                 } // END if
 
                 $prepared =
-                    tokolariso_fsb_prepare_upsell_product(
+                    free_shipment_progressbar_prepare_upsell_product(
                         wc_get_product($variation_id)
                     );
 
@@ -1256,7 +1309,7 @@ function tokolariso_fsb_get_fallback_upsells(
         } // END if
 
         $prepared =
-            tokolariso_fsb_prepare_upsell_product($product);
+            free_shipment_progressbar_prepare_upsell_product($product);
 
         if(
             !$prepared
@@ -1274,9 +1327,9 @@ function tokolariso_fsb_get_fallback_upsells(
     } // END foreach
 
     return $upsells;
-} // END function tokolariso_fsb_get_fallback_upsells()
+} // END function free_shipment_progressbar_get_fallback_upsells()
 
-function tokolariso_fsb_get_customer_address(){
+function free_shipment_progressbar_get_customer_address(){
 
     $address = [
         'country' => '',
@@ -1358,7 +1411,7 @@ function tokolariso_fsb_get_customer_address(){
         'sanitize_text_field',
         $address
     );
-} // END function tokolariso_fsb_get_customer_address()
+} // END function free_shipment_progressbar_get_customer_address()
 
 
 
@@ -1366,7 +1419,7 @@ function tokolariso_fsb_get_customer_address(){
  * CENTRAL SHIPPING DATA
 ========================================================= */
 
-function tokolariso_get_shipping_data(
+function free_shipment_progressbar_get_shipping_data(
     $package = []
 ){
 
@@ -1403,7 +1456,7 @@ function tokolariso_get_shipping_data(
     ){
 
         $address =
-            tokolariso_fsb_get_customer_address();
+            free_shipment_progressbar_get_customer_address();
 
         $package = [
 
@@ -1490,17 +1543,17 @@ $zone =
                 '_config'
             );
 
-        tokolariso_fsb_debug_log(
+        free_shipment_progressbar_debug_log(
             'WBSNG CONFIG:',
             $config
         );
 
-        tokolariso_fsb_debug_log(
+        free_shipment_progressbar_debug_log(
             'WBSNG METHOD ID:',
             $method->instance_id
         );
 
-        tokolariso_fsb_debug_log(
+        free_shipment_progressbar_debug_log(
             'WBSNG METHOD OBJECT:',
             $method
         );
@@ -1529,7 +1582,7 @@ $zone =
     as $rule
 ){
 
-    tokolariso_fsb_debug_log(
+    free_shipment_progressbar_debug_log(
         'FREE SHIPPING RULE:',
         $rule
     );
@@ -1589,7 +1642,7 @@ $minimum =
     ? (float) $rule['price']['min']
     : 0;
 
-    tokolariso_fsb_debug_log(
+    free_shipment_progressbar_debug_log(
         'FREE SHIPPING MINIMUM:',
         $minimum
     );
@@ -1611,7 +1664,7 @@ $minimum =
 
         $min = $minimum;
 
-        tokolariso_fsb_debug_log(
+        free_shipment_progressbar_debug_log(
             'FREE SHIPPING FOUND:',
             $min
         );
@@ -1660,9 +1713,9 @@ return [
 
     'debug_methods' => $debug_methods
 ];
-} // END function tokolariso_get_shipping_data()
+} // END function free_shipment_progressbar_get_shipping_data()
 
-function tokolariso_fsb_get_shipping_saving_amount(
+function free_shipment_progressbar_get_shipping_saving_amount(
     $package = []
 ){
 
@@ -1773,7 +1826,7 @@ function tokolariso_fsb_get_shipping_saving_amount(
     } // END foreach
 
     return $lowest_amount;
-} // END function tokolariso_fsb_get_shipping_saving_amount()
+} // END function free_shipment_progressbar_get_shipping_saving_amount()
 
 
 /* =========================================================
@@ -1782,12 +1835,12 @@ function tokolariso_fsb_get_shipping_saving_amount(
 
 add_filter(
     'woocommerce_package_rates',
-    'tokolariso_force_wbsng_free_shipping',
+    'free_shipment_progressbar_force_wbsng_free_shipping',
     9999,
     2
 );
 
-function tokolariso_force_wbsng_free_shipping(
+function free_shipment_progressbar_force_wbsng_free_shipping(
     $rates,
     $package
 ){
@@ -1799,7 +1852,7 @@ function tokolariso_force_wbsng_free_shipping(
     } // END if
 
     $shipping_data =
-        tokolariso_get_shipping_data(
+        free_shipment_progressbar_get_shipping_data(
             $package
         );
 
@@ -1871,7 +1924,7 @@ function tokolariso_force_wbsng_free_shipping(
          */
 
         $rate->add_meta_data(
-            'tokolariso_free_shipping',
+            'free_shipment_progressbar_free_shipping',
             'yes',
             true
         );
@@ -1941,11 +1994,11 @@ body.admin-bar {
 .count-number.pulse {
 
     animation:
-        tokolariso-cart-pulse
+        free-shipment-progressbar-cart-pulse
         0.35s ease;
 }
 
-@keyframes tokolariso-cart-pulse {
+@keyframes free-shipment-progressbar-cart-pulse {
 
     0% {
 
@@ -2464,15 +2517,15 @@ function normalizeCartAddress(address) {
 function getCartAddressStorageKey() {
 
     return fsb_ajax.is_logged_in
-        ? 'tokolariso_fsb_account_address'
-        : 'tokolariso_fsb_checkout_address';
+        ? 'free_shipment_progressbar_account_address'
+        : 'free_shipment_progressbar_checkout_address';
 } // END function getCartAddressStorageKey()
 
 function cleanupLegacyStoredAddress() {
 
     try {
         window.localStorage
-            ?.removeItem('tokolariso_fsb_cart_address');
+            ?.removeItem('free_shipment_progressbar_cart_address');
     } catch(e) {}
 } // END function cleanupLegacyStoredAddress()
 
@@ -2589,7 +2642,7 @@ function getCartItemCount(cart) {
     } // END if
 
     const serverCount =
-        Number(window.tokolarisoServerCartCount);
+        Number(window.free_shipment_progressbarServerCartCount);
 
     if (
         !Number.isNaN(serverCount)
@@ -2656,7 +2709,7 @@ function isCartVisiblyEmpty() {
         document.body.classList.contains('woocommerce-cart')
         &&
         document.body.textContent.includes(
-            'Je winkelwagen is momenteel leeg'
+            'Your cart is currently empty'
         )
     );
 } // END function isCartVisiblyEmpty()
@@ -2692,6 +2745,248 @@ function getBlocksCartData() {
         return null;
     } // END try
 } // END function getBlocksCartData()
+
+function getBlocksStoreAddress() {
+
+    if (
+        !window.wp
+        ||
+        !wp.data
+        ||
+        !wp.data.select
+    ) {
+        return null;
+    } // END if
+
+    const candidates = [];
+
+    try {
+
+        const checkoutStore =
+            wp.data.select('wc/store/checkout');
+
+        if (checkoutStore) {
+
+            [
+                'getShippingAddress',
+                'getBillingAddress'
+            ].forEach(function(method){
+
+                if (
+                    typeof checkoutStore[method]
+                    === 'function'
+                ) {
+                    candidates.push(
+                        checkoutStore[method]()
+                    );
+                } // END if
+            });
+        } // END if
+    } catch(e) {}
+
+    try {
+
+        const cartStore =
+            wp.data.select('wc/store/cart');
+
+        if (cartStore) {
+
+            if (
+                typeof cartStore.getCartData
+                === 'function'
+            ) {
+
+                const cartData =
+                    cartStore.getCartData();
+
+                candidates.push(
+                    cartData?.shippingAddress,
+                    cartData?.billingAddress
+                );
+            } // END if
+
+            if (
+                typeof cartStore.getCustomerData
+                === 'function'
+            ) {
+
+                const customerData =
+                    cartStore.getCustomerData();
+
+                candidates.push(
+                    customerData?.shippingAddress,
+                    customerData?.billingAddress
+                );
+            } // END if
+        } // END if
+    } catch(e) {}
+
+    for (const candidate of candidates) {
+
+        if (
+            !candidate
+            ||
+            (
+                !candidate.country
+                &&
+                !candidate.postcode
+                &&
+                !candidate.city
+            )
+        ) {
+            continue;
+        } // END if
+
+        const address =
+            normalizeCartAddress(candidate);
+
+        if (
+            address.country
+            ||
+            address.postcode
+            ||
+            address.city
+        ) {
+            return address;
+        } // END if
+    } // END for
+
+    return null;
+} // END function getBlocksStoreAddress()
+
+function normalizeCheckoutCountry(value) {
+
+    const country =
+        String(value || '').trim();
+
+    const normalized =
+        country.toLowerCase();
+
+    const countryMap = {
+        nederland: 'NL',
+        netherlands: 'NL',
+        belgie: 'BE',
+        'belgië': 'BE',
+        belgium: 'BE',
+        belgique: 'BE',
+        deutschland: 'DE',
+        duitsland: 'DE',
+        germany: 'DE',
+        frankrijk: 'FR',
+        france: 'FR'
+    };
+
+    return countryMap[normalized]
+        || country;
+} // END function normalizeCheckoutCountry()
+
+function getCheckoutFieldValue(selectors) {
+
+    const roots = [
+        document.querySelector('.wc-block-checkout'),
+        document.querySelector('.wp-block-woocommerce-checkout'),
+        document.querySelector('form.woocommerce-checkout'),
+        document.body
+    ].filter(Boolean);
+
+    for (const root of roots) {
+
+        for (const selector of selectors) {
+
+            const field =
+                root.querySelector(selector);
+
+            if (!field) {
+                continue;
+            } // END if
+
+            const value =
+                field.value
+                || field.getAttribute('value')
+                || field.selectedOptions?.[0]?.value
+                || field.selectedOptions?.[0]?.textContent
+                || '';
+
+            if (String(value || '').trim()) {
+                return String(value).trim();
+            } // END if
+        } // END for
+    } // END for
+
+    return '';
+} // END function getCheckoutFieldValue()
+
+function getCheckoutDomAddress() {
+
+    const country =
+        normalizeCheckoutCountry(
+            getCheckoutFieldValue([
+                '#shipping-country',
+                '#billing-country',
+                '#shipping_country',
+                '#billing_country',
+                '#calc_shipping_country',
+                '[name="shipping-country"]',
+                '[name="billing-country"]',
+                '[name="shipping_country"]',
+                '[name="billing_country"]',
+                '[name="country"]',
+                '[autocomplete="shipping country"]',
+                '[autocomplete="billing country"]'
+            ])
+        );
+
+    const postcode =
+        getCheckoutFieldValue([
+            '#shipping-postcode',
+            '#billing-postcode',
+            '#shipping_postcode',
+            '#billing_postcode',
+            '#calc_shipping_postcode',
+            '[name="shipping-postcode"]',
+            '[name="billing-postcode"]',
+            '[name="shipping_postcode"]',
+            '[name="billing_postcode"]',
+            '[name="postcode"]',
+            '[autocomplete="shipping postal-code"]',
+            '[autocomplete="billing postal-code"]'
+        ]);
+
+    const city =
+        getCheckoutFieldValue([
+            '#shipping-city',
+            '#billing-city',
+            '#shipping_city',
+            '#billing_city',
+            '#calc_shipping_city',
+            '[name="shipping-city"]',
+            '[name="billing-city"]',
+            '[name="shipping_city"]',
+            '[name="billing_city"]',
+            '[name="city"]',
+            '[autocomplete="shipping address-level2"]',
+            '[autocomplete="billing address-level2"]'
+        ]);
+
+    const address =
+        normalizeCartAddress({
+            country,
+            postcode,
+            city
+        });
+
+    if (
+        country
+        ||
+        postcode
+        ||
+        city
+    ) {
+        return address;
+    } // END if
+
+    return null;
+} // END function getCheckoutDomAddress()
 
 function setCartCounterValue(count) {
 
@@ -3027,8 +3322,8 @@ bar.innerHTML = `
             class="upsells-arrow prev"
             type="button"
             aria-label="<?php echo esc_attr__(
-    'Vorige',
-    'tokolariso'
+    'Previous',
+    'free_shipment_progressbar'
 ); ?>"
         >
             ‹
@@ -3040,8 +3335,8 @@ bar.innerHTML = `
             class="upsells-arrow next"
             type="button"
             aria-label="<?php echo esc_attr__(
-    'Volgende',
-    'tokolariso'
+    'Next',
+    'free_shipment_progressbar'
 ); ?>"
         >
             ›
@@ -3296,10 +3591,10 @@ if (
     updateSlider();
 
     if (
-        window.tokolarisoFsbCarouselTimer
+        window.free_shipment_progressbarFsbCarouselTimer
     ) {
         clearInterval(
-            window.tokolarisoFsbCarouselTimer
+            window.free_shipment_progressbarFsbCarouselTimer
         );
     } // END if
 
@@ -3346,7 +3641,7 @@ if (
         &&
         upsells.length > 3
     ) {
-        window.tokolarisoFsbCarouselTimer =
+        window.free_shipment_progressbarFsbCarouselTimer =
             setInterval(
                 showNextUpsells,
                 carouselInterval * 1000
@@ -3477,68 +3772,65 @@ function pickupSelected() {
             Boolean(fsb_ajax.use_customer_address);
         const canUseStoredAddress =
             !useCustomerAddress;
+        let hasFreshCheckoutAddress =
+            false;
 
         /*
          * WooCommerce Blocks
          */
 
-        const cartData =
-            getBlocksCartData();
+        const blocksAddress =
+            getBlocksStoreAddress();
 
-        if (cartData) {
+        if (blocksAddress) {
 
-            try {
+            country =
+                blocksAddress.country || country;
 
-                if (cartData?.shippingAddress) {
+            postcode =
+                blocksAddress.postcode || postcode;
 
-                    country =
-                        cartData.shippingAddress.country || 'NL';
+            city =
+                blocksAddress.city || city;
 
-                    postcode =
-                        cartData.shippingAddress.postcode || '';
-
-                    city =
-                        cartData.shippingAddress.city || '';
-                } // END if
-
-            } catch(e) {}
-        } // END catch
+            hasFreshCheckoutAddress =
+                true;
+        } // END if
 
         /*
-         * Classic fallback
+         * Checkout DOM fallback. WooCommerce Blocks uses hyphenated field
+         * IDs in some themes, while classic checkout uses underscored IDs.
          */
 
         if (
-            !postcode
-            &&
-            !city
-            &&
             !useCustomerAddress
         ) {
 
-            country =
-                document.querySelector('#shipping_country')?.value
-                || document.querySelector('#billing_country')?.value
-                || document.querySelector('#calc_shipping_country')?.value
-                || country;
+            const domAddress =
+                getCheckoutDomAddress();
 
-            postcode =
-                document.querySelector('#shipping_postcode')?.value
-                || document.querySelector('#billing_postcode')?.value
-                || document.querySelector('#calc_shipping_postcode')?.value
-                || '';
+            if (domAddress) {
 
-            city =
-                document.querySelector('#shipping_city')?.value
-                || document.querySelector('#billing_city')?.value
-                || document.querySelector('#calc_shipping_city')?.value
-                || '';
+                country =
+                    domAddress.country || country;
+
+                postcode =
+                    domAddress.postcode || postcode;
+
+                city =
+                    domAddress.city || city;
+
+                hasFreshCheckoutAddress =
+                    true;
+            } // END if
         } // END if
 
         if (
             !postcode
             &&
             !city
+            &&
+            !hasFreshCheckoutAddress
             &&
             canUseStoredAddress
         ) {
@@ -3771,11 +4063,11 @@ if (DEBUG) {
         !Number.isNaN(Number(data.cart_count))
     ) {
 
-        window.tokolarisoServerCartCount =
+        window.free_shipment_progressbarServerCartCount =
             Number(data.cart_count);
 
         setCartCounterValue(
-            window.tokolarisoServerCartCount
+            window.free_shipment_progressbarServerCartCount
         );
     } // END if
 
@@ -4135,7 +4427,7 @@ document.body.addEventListener(
 
         formData.append(
             'action',
-            'tokolariso_add_upsell_to_cart'
+            'free_shipment_progressbar_add_upsell_to_cart'
         );
 
         formData.append(
@@ -4364,9 +4656,9 @@ function getCartDomSignature() {
 
 const cartObserver = new MutationObserver(function(){
 
-    clearTimeout(window.tokolarisoCartTimer);
+    clearTimeout(window.free_shipment_progressbarCartTimer);
 
-    window.tokolarisoCartTimer =
+    window.free_shipment_progressbarCartTimer =
         setTimeout(function(){
 
 const cartSignature =
@@ -4375,12 +4667,12 @@ const cartSignature =
 if (
     cartSignature
     &&
-    cartSignature === window.tokolarisoLastCartDomSignature
+    cartSignature === window.free_shipment_progressbarLastCartDomSignature
 ) {
     return;
 } // END if
 
-window.tokolarisoLastCartDomSignature =
+window.free_shipment_progressbarLastCartDomSignature =
     cartSignature;
 
 if (DEBUG) {
@@ -4448,7 +4740,7 @@ function observeBlocksCartNode() {
         return false;
     } // END if
 
-    window.tokolarisoLastCartDomSignature =
+    window.free_shipment_progressbarLastCartDomSignature =
         getCartDomSignature();
 
     cartObserver.observe(
@@ -4562,15 +4854,15 @@ if (
 
 add_action(
     'wp_ajax_get_free_shipping_progress',
-    'tokolariso_get_free_shipping_progress'
+    'free_shipment_progressbar_get_free_shipping_progress'
 );
 
 add_action(
     'wp_ajax_nopriv_get_free_shipping_progress',
-    'tokolariso_get_free_shipping_progress'
+    'free_shipment_progressbar_get_free_shipping_progress'
 );
 
-function tokolariso_get_free_shipping_progress(){
+function free_shipment_progressbar_get_free_shipping_progress(){
 
     /*
      * Deze endpoint is read-only: hij leest winkelwagen- en verzendzone-data
@@ -4579,7 +4871,7 @@ function tokolariso_get_free_shipping_progress(){
      */
 
     check_ajax_referer(
-        'tokolariso_fsb_progress',
+        'free_shipment_progressbar_progress',
         'security',
         false
     );
@@ -4597,7 +4889,7 @@ if(
     ]);
 
     return;
-} // END function tokolariso_get_free_shipping_progress()
+} // END function free_shipment_progressbar_get_free_shipping_progress()
 
     /*
      * Cart loaded?
@@ -4665,7 +4957,7 @@ $has_ajax_address =
     $city !== '';
 
 $saved_address =
-    tokolariso_fsb_get_customer_address();
+    free_shipment_progressbar_get_customer_address();
 
 $use_customer_address =
     is_user_logged_in()
@@ -4757,17 +5049,17 @@ $package = [
  */
 
 $shipping_data =
-    tokolariso_get_shipping_data(
+    free_shipment_progressbar_get_shipping_data(
         $package
     );
 
 $shipping_saving =
-    tokolariso_fsb_get_shipping_saving_amount(
+    free_shipment_progressbar_get_shipping_saving_amount(
         $package
     );
 
 $upsells =
-    tokolariso_fsb_get_upsells(15);
+    free_shipment_progressbar_get_upsells(15);
 
 	/*
  * Geen gratis verzending beschikbaar?
@@ -4842,7 +5134,7 @@ if(
 
 /*
  * SMART UPSELLS ENGINE
- * TOKO LARISO
+ * FREE SHIPPING AND PROGRESSBAR
  * WPML COMPATIBLE
 ========================================================= */
 
@@ -4852,7 +5144,7 @@ if(false){
  * WPML taal
  */
 
-$current_language = 'nl';
+$current_language = 'en';
 
 if (
     has_filter('wpml_current_language')
@@ -4970,7 +5262,7 @@ foreach (
                 $term->term_id,
                 'product_cat',
                 true,
-                'nl'
+                'en'
             );
 
         if ($original_id) {
@@ -5232,7 +5524,7 @@ foreach (
 
 /*
  * Admin-managed rules override the legacy hardcoded candidates.
- * When no rules are saved, tokolariso_fsb_get_upsells() uses the
+ * When no rules are saved, free_shipment_progressbar_get_upsells() uses the
  * same legacy category mappings as its defaults.
  */
 
@@ -5268,11 +5560,11 @@ if(
         $remaining > 0
     ){
 
-        $message = tokolariso_fsb_safe_sprintf(
+        $message = free_shipment_progressbar_safe_sprintf(
 
             __(
-                'Voeg %s toe voor gratis verzending 🚚',
-                'tokolariso'
+                'Add %s for free shipping 🚚',
+                'free_shipment_progressbar'
             ),
 
             wc_price($remaining)
@@ -5281,18 +5573,18 @@ if(
     }else{
 
         $message =
-            __('Je hebt gratis verzending 🎉', 'tokolariso');
+            __('You have free shipping 🎉', 'free_shipment_progressbar');
     } // END else
 
     if(
         $remaining > 0
         && $shipping_saving > 0
     ){
-        $message = tokolariso_fsb_safe_sprintf(
+        $message = free_shipment_progressbar_safe_sprintf(
 
             __(
-                'Voeg %1$s toe voor gratis verzending en bespaar %2$s 🚚',
-                'tokolariso'
+                'Add %1$s for free shipping and save %2$s 🚚',
+                'free_shipment_progressbar'
             ),
 
             wc_price($remaining),
@@ -5307,11 +5599,11 @@ if(
         $remaining > 0
         && $shipping_saving > 0
     ){
-        $mobile_message = tokolariso_fsb_safe_sprintf(
+        $mobile_message = free_shipment_progressbar_safe_sprintf(
 
             __(
-                'Nog %1$s tot gratis verzending. Bespaar %2$s',
-                'tokolariso'
+                '%1$s left for free shipping. Save %2$s',
+                'free_shipment_progressbar'
             ),
 
             wc_price($remaining),
@@ -5364,27 +5656,27 @@ wp_send_json([
 
     'debug_shipping_data' => $shipping_data
 ]);
-} // END function tokolariso_get_free_shipping_progress()
+} // END function free_shipment_progressbar_get_free_shipping_progress()
 
 /* =========================
    AJAX ADD TO CART
 ========================= */
 
 add_action(
-    'wp_ajax_tokolariso_add_upsell_to_cart',
-    'tokolariso_add_upsell_to_cart'
+    'wp_ajax_free_shipment_progressbar_add_upsell_to_cart',
+    'free_shipment_progressbar_add_upsell_to_cart'
 );
 
 add_action(
-    'wp_ajax_nopriv_tokolariso_add_upsell_to_cart',
-    'tokolariso_add_upsell_to_cart'
+    'wp_ajax_nopriv_free_shipment_progressbar_add_upsell_to_cart',
+    'free_shipment_progressbar_add_upsell_to_cart'
 );
 
-function tokolariso_add_upsell_to_cart(){
+function free_shipment_progressbar_add_upsell_to_cart(){
 
     if(
         !check_ajax_referer(
-            'tokolariso_fsb_cart',
+            'free_shipment_progressbar_cart',
             'security',
             false
         )
@@ -5497,7 +5789,7 @@ function tokolariso_add_upsell_to_cart(){
 
         wp_send_json([
             'success' => false,
-            'message' => 'Toevoegen mislukt'
+            'message' => 'Add to cart failed'
         ]);
 
         return;
@@ -5518,7 +5810,7 @@ function tokolariso_add_upsell_to_cart(){
         'success' => true
     ]);
 
-} // END function tokolariso_add_upsell_to_cart()
+} // END function free_shipment_progressbar_add_upsell_to_cart()
 
 /* =========================
    STORE API SHIPPING FIX
@@ -5526,12 +5818,12 @@ function tokolariso_add_upsell_to_cart(){
 
 add_filter(
     'woocommerce_store_api_cart_shipping_rates',
-    'tokolariso_fix_store_api_shipping_rates',
+    'free_shipment_progressbar_fix_store_api_shipping_rates',
     9999,
     2
 );
 
-function tokolariso_fix_store_api_shipping_rates(
+function free_shipment_progressbar_fix_store_api_shipping_rates(
     $shipping_rates,
     $cart
 ){
@@ -5545,7 +5837,7 @@ function tokolariso_fix_store_api_shipping_rates(
     } // END else
 
     $minimum =
-        tokolariso_get_shipping_data()['minimum']
+        free_shipment_progressbar_get_shipping_data()['minimum']
         ?? 0;
 
     $total =
@@ -5632,7 +5924,7 @@ function tokolariso_fix_store_api_shipping_rates(
 
     return $shipping_rates;
 
-} // END function tokolariso_fix_store_api_shipping_rates()
+} // END function free_shipment_progressbar_fix_store_api_shipping_rates()
 /* =========================
   SUBTOTALS FIX
 ========================= */
@@ -5734,7 +6026,7 @@ async function injectSubtotalRow(){
 
     const customSubtotalRows =
         totalsRoot.querySelectorAll(
-            '.tokolariso-subtotal-row'
+            '.free-shipment-progressbar-subtotal-row'
         );
 
     customSubtotalRows.forEach(function(row, index){
@@ -5759,7 +6051,7 @@ async function injectSubtotalRow(){
 
                 if (
                     row.classList.contains(
-                        'tokolariso-subtotal-row'
+                        'free-shipment-progressbar-subtotal-row'
                     )
                 ) {
                     return false;
@@ -5791,7 +6083,7 @@ async function injectSubtotalRow(){
 
     const customSubtotal =
         totalsRoot.querySelector(
-            '.tokolariso-subtotal-row'
+            '.free-shipment-progressbar-subtotal-row'
         );
 
     /*
@@ -5988,7 +6280,7 @@ if (customSubtotal) {
         document.createElement('div');
 
     row.className =
-        'wc-block-components-totals-item tokolariso-subtotal-row';
+        'wc-block-components-totals-item free-shipment-progressbar-subtotal-row';
 
     row.style.marginBottom =
         '20px';
@@ -6056,10 +6348,10 @@ window.addEventListener(
             new MutationObserver(function(){
 
                 clearTimeout(
-                    window.tokolarisoSubtotalTimer
+                    window.free_shipment_progressbarSubtotalTimer
                 );
 
-                window.tokolarisoSubtotalTimer =
+                window.free_shipment_progressbarSubtotalTimer =
                     setTimeout(function(){
 
                         injectSubtotalRow();

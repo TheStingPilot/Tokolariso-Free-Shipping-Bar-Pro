@@ -100,7 +100,7 @@ async function injectSubtotalRow(){
 
     const customSubtotalRows =
         totalsRoot.querySelectorAll(
-            '.tokolariso-subtotal-row'
+            '.free-shipment-progressbar-subtotal-row'
         );
 
     customSubtotalRows.forEach(function(row, index){
@@ -125,7 +125,7 @@ async function injectSubtotalRow(){
 
                 if (
                     row.classList.contains(
-                        'tokolariso-subtotal-row'
+                        'free-shipment-progressbar-subtotal-row'
                     )
                 ) {
                     return false;
@@ -157,7 +157,7 @@ async function injectSubtotalRow(){
 
     const customSubtotal =
         totalsRoot.querySelector(
-            '.tokolariso-subtotal-row'
+            '.free-shipment-progressbar-subtotal-row'
         );
 
     /*
@@ -354,7 +354,7 @@ if (customSubtotal) {
         document.createElement('div');
 
     row.className =
-        'wc-block-components-totals-item tokolariso-subtotal-row';
+        'wc-block-components-totals-item free-shipment-progressbar-subtotal-row';
 
     row.style.marginBottom =
         '20px';
@@ -422,10 +422,10 @@ window.addEventListener(
             new MutationObserver(function(){
 
                 clearTimeout(
-                    window.tokolarisoSubtotalTimer
+                    window.free_shipment_progressbarSubtotalTimer
                 );
 
-                window.tokolarisoSubtotalTimer =
+                window.free_shipment_progressbarSubtotalTimer =
                     setTimeout(function(){
 
                         injectSubtotalRow();

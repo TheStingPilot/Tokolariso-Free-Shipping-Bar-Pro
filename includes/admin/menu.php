@@ -6,21 +6,21 @@ if (!defined('ABSPATH')) {
 
 add_action(
     'admin_menu',
-    'tokolariso_fsb_admin_menu'
+    'free_shipment_progressbar_admin_menu'
 );
 
-if ( ! function_exists( 'tokolariso_fsb_admin_menu' ) ) {
-function tokolariso_fsb_admin_menu(){
+if ( ! function_exists( 'free_shipment_progressbar_admin_menu' ) ) {
+function free_shipment_progressbar_admin_menu(){
 
     add_submenu_page(
         'woocommerce',
-        'Free Shipping Bar',
-        'Free Shipping Bar',
+        'Free Shipping and Progressbar PRO',
+        'Free Shipping and Progressbar PRO',
         'manage_woocommerce',
-        'tokolariso-fsb',
-        'tokolariso_fsb_settings_page'
+        'free-shipment-progressbar-fsb',
+        'free_shipment_progressbar_settings_page'
     );
 
-} // END function tokolariso_fsb_admin_menu()
+} // END function free_shipment_progressbar_admin_menu()
 
 } // END if
