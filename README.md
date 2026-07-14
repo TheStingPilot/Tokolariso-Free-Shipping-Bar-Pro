@@ -2,7 +2,7 @@
 
 Technical documentation for the WooCommerce plugin **Free Shipping and Progressbar PRO**.
 
-Current plugin version: `2.0.0`
+Current plugin version: `2.0.1`
 
 ## Purpose
 
@@ -387,6 +387,14 @@ free-shipping-and-progressbar-pro/
 Do not include historical zip files inside the installable zip.
 
 ## Changelog
+
+### 2.0.1 - 2026-07-14
+
+- Changed the default WPML source language for upsell rules from `en` to `nl`.
+- Treats stale `en` source-language option values from version 2.0.0 as `nl` at runtime.
+- Forced the admin product search to query products in the configured source language.
+- Added a hard WPML language check before product search results are returned, preventing translated products from appearing in source-language upsell selectors.
+- Updated the admin source language notice to `Dutch (nl)`.
 
 ### 2.0.0 - 2026-07-08
 

@@ -176,6 +176,64 @@ function free_shipment_progressbar_admin_product_label(
     );
 } // END function free_shipment_progressbar_admin_product_label()
 
+function free_shipment_progressbar_admin_product_has_source_language(
+    $product
+){
+
+    if(
+        !$product
+    ){
+        return false;
+    } // END if
+
+    if(
+        !has_filter('wpml_element_language_code')
+    ){
+        return true;
+    } // END if
+
+    $source_language =
+        function_exists('free_shipment_progressbar_get_source_language')
+        ? free_shipment_progressbar_get_source_language()
+        : get_option(
+            'free_shipment_progressbar_wpml_source_language',
+            'nl'
+        );
+
+    $element_id =
+        $product->is_type('variation')
+        ? $product->get_parent_id()
+        : $product->get_id();
+
+    $language =
+        apply_filters(
+            'wpml_element_language_code',
+            null,
+            [
+                'element_id' => $element_id,
+                'element_type' => 'post_product',
+            ]
+        );
+
+    if(
+        !$language
+        &&
+        $product->is_type('variation')
+    ){
+        $language =
+            apply_filters(
+                'wpml_element_language_code',
+                null,
+                [
+                    'element_id' => $product->get_id(),
+                    'element_type' => 'post_product_variation',
+                ]
+            );
+    } // END if
+
+    return $language === $source_language;
+} // END function free_shipment_progressbar_admin_product_has_source_language()
+
 function free_shipment_progressbar_admin_normalize_search_text(
     $value
 ){
@@ -291,6 +349,8 @@ function free_shipment_progressbar_find_products_for_admin(
             'posts_per_page' => 80,
             'fields' => 'ids',
             's' => $search,
+            'lang' => free_shipment_progressbar_get_source_language(),
+            'suppress_filters' => false,
         ]);
 
     $candidate_ids =
@@ -305,6 +365,8 @@ function free_shipment_progressbar_find_products_for_admin(
             'post_status' => 'publish',
             'posts_per_page' => 80,
             'fields' => 'ids',
+            'lang' => free_shipment_progressbar_get_source_language(),
+            'suppress_filters' => false,
             'meta_query' => [
                 [
                     'key' => '_sku',
@@ -343,14 +405,16 @@ function free_shipment_progressbar_find_products_for_admin(
                 continue;
             } // END if
 
-            $alias_query =
-                new WP_Query([
-                    'post_type' => ['product', 'product_variation'],
-                    'post_status' => 'publish',
-                    'posts_per_page' => 80,
-                    'fields' => 'ids',
-                    's' => $alias,
-                ]);
+                $alias_query =
+                    new WP_Query([
+                        'post_type' => ['product', 'product_variation'],
+                        'post_status' => 'publish',
+                        'posts_per_page' => 80,
+                        'fields' => 'ids',
+                        's' => $alias,
+                        'lang' => free_shipment_progressbar_get_source_language(),
+                        'suppress_filters' => false,
+                    ]);
 
             $candidate_ids =
                 array_merge(
@@ -376,6 +440,8 @@ function free_shipment_progressbar_find_products_for_admin(
             'fields' => 'ids',
             'orderby' => 'title',
             'order' => 'ASC',
+            'lang' => free_shipment_progressbar_get_source_language(),
+            'suppress_filters' => false,
         ]);
 
     $candidate_ids =
@@ -400,6 +466,8 @@ function free_shipment_progressbar_find_products_for_admin(
                 &&
                 free_shipment_progressbar_is_wcpos_pos_only_product($product)
             )
+            ||
+            !free_shipment_progressbar_admin_product_has_source_language($product)
             ||
             !free_shipment_progressbar_admin_product_matches_search($product, $search)
         ){
@@ -806,7 +874,7 @@ function free_shipment_progressbar_settings_page(){
 
         update_option(
             'free_shipment_progressbar_wpml_source_language',
-            'en',
+            'nl',
             false
         );
 
@@ -1351,7 +1419,7 @@ function free_shipment_progressbar_settings_page(){
             <div>
                 <h2><?php esc_html_e('Upsell rules', 'free_shipment_progressbar'); ?></h2>
                 <p><?php esc_html_e('Create rules based on categories or specific products. Higher priority is shown first.', 'free_shipment_progressbar'); ?></p>
-                <p><?php esc_html_e('WPML source language for rules: English (en).', 'free_shipment_progressbar'); ?></p>
+                <p><?php esc_html_e('WPML source language for rules: Dutch (nl).', 'free_shipment_progressbar'); ?></p>
             </div>
 
             <div class="free-shipment-progressbar-fsb-actions">

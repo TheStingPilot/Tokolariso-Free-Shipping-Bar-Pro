@@ -518,8 +518,20 @@ function free_shipment_progressbar_get_source_language(){
     $language =
         get_option(
             'free_shipment_progressbar_wpml_source_language',
-            'en'
+            'nl'
         );
+
+    /*
+     * Version 2.0.0 briefly stored English as source language.
+     * This installation uses Dutch source products/categories, so migrate
+     * that stale value at runtime instead of waiting for an admin save.
+     */
+
+    if(
+        $language === 'en'
+    ){
+        $language = 'nl';
+    } // END if
 
     $language =
         apply_filters(
@@ -527,7 +539,7 @@ function free_shipment_progressbar_get_source_language(){
             $language
         );
 
-    return $language ? $language : 'en';
+    return $language ? $language : 'nl';
 } // END function free_shipment_progressbar_get_source_language()
 
 function free_shipment_progressbar_get_carousel_interval_seconds(){
