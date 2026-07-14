@@ -1,0 +1,11 @@
+config/config.json
+config/ProductCatalogusGUI.settings.json
+config/ProductCatalogusGUI.secrets.json
+logs/*.log
+output/*.xlsx
+output/*.xlsm
+output/*.csv
+output/*.docx
+output/*.pdf
+output/*.tmp
+_UpdateGit.cmd
