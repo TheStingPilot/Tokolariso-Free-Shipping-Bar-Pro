@@ -83,8 +83,14 @@ function free_shipment_progressbar_search_products(){
         wp_send_json([]);
     } // END if
 
+    $language =
+        free_shipment_progressbar_admin_get_requested_product_language();
+
     $products =
-        free_shipment_progressbar_find_products_for_admin($term);
+        free_shipment_progressbar_find_products_for_admin(
+            $term,
+            $language
+        );
 
     $results = [];
 
@@ -100,6 +106,40 @@ function free_shipment_progressbar_search_products(){
 
     wp_send_json($results);
 } // END function free_shipment_progressbar_search_products()
+
+function free_shipment_progressbar_admin_get_requested_product_language(){
+
+    $language =
+        sanitize_key(
+            wp_unslash(
+                $_REQUEST['lang'] ?? ''
+            )
+        );
+
+    if(
+        $language
+    ){
+        return $language;
+    } // END if
+
+    if(
+        has_filter('wpml_current_language')
+    ){
+        $language =
+            apply_filters(
+                'wpml_current_language',
+                null
+            );
+
+        if(
+            $language
+        ){
+            return sanitize_key($language);
+        } // END if
+    } // END if
+
+    return free_shipment_progressbar_get_source_language();
+} // END function free_shipment_progressbar_admin_get_requested_product_language()
 
 function free_shipment_progressbar_admin_product_categories_for_select(
     $product
@@ -176,8 +216,9 @@ function free_shipment_progressbar_admin_product_label(
     );
 } // END function free_shipment_progressbar_admin_product_label()
 
-function free_shipment_progressbar_admin_product_has_source_language(
-    $product
+function free_shipment_progressbar_admin_product_has_language(
+    $product,
+    $language
 ){
 
     if(
@@ -186,26 +227,27 @@ function free_shipment_progressbar_admin_product_has_source_language(
         return false;
     } // END if
 
+    $requested_language =
+        sanitize_key($language);
+
+    if(
+        !$requested_language
+    ){
+        return true;
+    } // END if
+
     if(
         !has_filter('wpml_element_language_code')
     ){
         return true;
     } // END if
 
-    $source_language =
-        function_exists('free_shipment_progressbar_get_source_language')
-        ? free_shipment_progressbar_get_source_language()
-        : get_option(
-            'free_shipment_progressbar_wpml_source_language',
-            'nl'
-        );
-
     $element_id =
         $product->is_type('variation')
         ? $product->get_parent_id()
         : $product->get_id();
 
-    $language =
+    $product_language =
         apply_filters(
             'wpml_element_language_code',
             null,
@@ -216,11 +258,11 @@ function free_shipment_progressbar_admin_product_has_source_language(
         );
 
     if(
-        !$language
+        !$product_language
         &&
         $product->is_type('variation')
     ){
-        $language =
+        $product_language =
             apply_filters(
                 'wpml_element_language_code',
                 null,
@@ -231,8 +273,8 @@ function free_shipment_progressbar_admin_product_has_source_language(
             );
     } // END if
 
-    return $language === $source_language;
-} // END function free_shipment_progressbar_admin_product_has_source_language()
+    return $product_language === $requested_language;
+} // END function free_shipment_progressbar_admin_product_has_language()
 
 function free_shipment_progressbar_admin_normalize_search_text(
     $value
@@ -337,7 +379,8 @@ function free_shipment_progressbar_admin_product_matches_search(
 } // END function free_shipment_progressbar_admin_product_matches_search()
 
 function free_shipment_progressbar_find_products_for_admin(
-    $search
+    $search,
+    $language = ''
 ){
 
     $candidate_ids = [];
@@ -349,7 +392,7 @@ function free_shipment_progressbar_find_products_for_admin(
             'posts_per_page' => 80,
             'fields' => 'ids',
             's' => $search,
-            'lang' => free_shipment_progressbar_get_source_language(),
+            'lang' => $language,
             'suppress_filters' => false,
         ]);
 
@@ -365,7 +408,7 @@ function free_shipment_progressbar_find_products_for_admin(
             'post_status' => 'publish',
             'posts_per_page' => 80,
             'fields' => 'ids',
-            'lang' => free_shipment_progressbar_get_source_language(),
+            'lang' => $language,
             'suppress_filters' => false,
             'meta_query' => [
                 [
@@ -412,7 +455,7 @@ function free_shipment_progressbar_find_products_for_admin(
                         'posts_per_page' => 80,
                         'fields' => 'ids',
                         's' => $alias,
-                        'lang' => free_shipment_progressbar_get_source_language(),
+                        'lang' => $language,
                         'suppress_filters' => false,
                     ]);
 
@@ -440,7 +483,7 @@ function free_shipment_progressbar_find_products_for_admin(
             'fields' => 'ids',
             'orderby' => 'title',
             'order' => 'ASC',
-            'lang' => free_shipment_progressbar_get_source_language(),
+            'lang' => $language,
             'suppress_filters' => false,
         ]);
 
@@ -467,7 +510,13 @@ function free_shipment_progressbar_find_products_for_admin(
                 free_shipment_progressbar_is_wcpos_pos_only_product($product)
             )
             ||
-            !free_shipment_progressbar_admin_product_has_source_language($product)
+            (
+                function_exists('free_shipment_progressbar_is_giftcard_product')
+                &&
+                free_shipment_progressbar_is_giftcard_product($product)
+            )
+            ||
+            !free_shipment_progressbar_admin_product_has_language($product, $language)
             ||
             !free_shipment_progressbar_admin_product_matches_search($product, $search)
         ){
@@ -874,7 +923,7 @@ function free_shipment_progressbar_settings_page(){
 
         update_option(
             'free_shipment_progressbar_wpml_source_language',
-            'nl',
+            'en',
             false
         );
 
@@ -1419,7 +1468,7 @@ function free_shipment_progressbar_settings_page(){
             <div>
                 <h2><?php esc_html_e('Upsell rules', 'free_shipment_progressbar'); ?></h2>
                 <p><?php esc_html_e('Create rules based on categories or specific products. Higher priority is shown first.', 'free_shipment_progressbar'); ?></p>
-                <p><?php esc_html_e('WPML source language for rules: Dutch (nl).', 'free_shipment_progressbar'); ?></p>
+                <p><?php esc_html_e('WPML source language for plugin strings: English (en). Product selectors follow the active product language.', 'free_shipment_progressbar'); ?></p>
             </div>
 
             <div class="free-shipment-progressbar-fsb-actions">
@@ -1549,6 +1598,10 @@ function free_shipment_progressbar_settings_page(){
         const productSearchNonce =
             '<?php echo esc_js(wp_create_nonce('free_shipment_progressbar_product_search')); ?>';
 
+        const productSearchLanguage =
+            new URLSearchParams(window.location.search).get('lang')
+            || '<?php echo esc_js(free_shipment_progressbar_admin_get_requested_product_language()); ?>';
+
         let nextIndex =
             <?php echo (int) $row_index; ?>;
 
@@ -1590,7 +1643,8 @@ function free_shipment_progressbar_settings_page(){
                                 return {
                                     action: 'free_shipment_progressbar_search_products',
                                     security: productSearchNonce,
-                                    term: params.term || ''
+                                    term: params.term || '',
+                                    lang: productSearchLanguage
                                 };
                             },
                             processResults: function(data) {

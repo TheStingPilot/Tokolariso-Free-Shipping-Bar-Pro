@@ -2,7 +2,7 @@
 
 Technical documentation for the WooCommerce plugin **Free Shipping and Progressbar PRO**.
 
-Current plugin version: `2.0.1`
+Current plugin version: `2.1.1`
 
 ## Purpose
 
@@ -25,7 +25,7 @@ The plugin also adds a WooCommerce admin page where upsell rules can be managed 
 - Category-to-category upsell rules.
 - Rule priorities.
 - Fallback upsells when no rule-based upsell products are found.
-- Product and variation filtering for stock, price, and WCPOS POS-only visibility.
+- Product and variation filtering for stock, price, WCPOS POS-only visibility, and gift card products.
 - WooCommerce Cart and Checkout Blocks support.
 - Classic WooCommerce cart and checkout fallback support.
 - Sydney theme cart counter synchronization.
@@ -124,7 +124,7 @@ free_shipment_progressbar_debug
 free_shipment_progressbar_wpml_source_language
 ```
 
-Currently forced to `en` from the settings page so WPML treats English as the source language for rules.
+Currently forced to `en` from the settings page so WPML treats the plugin strings and rule storage as English-source content. Admin product selectors still follow the requested product language, such as `lang=nl`, `lang=it`, or any other WPML product language.
 
 ```text
 free_shipment_progressbar_upsell_rules
@@ -319,13 +319,15 @@ The plugin includes specific cart counter synchronization for the Sydney/Sydney 
 
 ## WPML Behavior
 
-The admin settings force the source language for rules to English:
+The admin settings force the source language for plugin strings and stored rule IDs to English:
 
 ```text
 en
 ```
 
 Rules are stored against source-language IDs. On the frontend, category and product IDs are translated to the current language with WPML filters when WPML is available.
+
+Admin product selectors are language-independent. They read the requested product language from the admin request, for example `lang=nl` or `lang=it`, and only return products whose WPML product language matches that requested language. This keeps the plugin usable on shops where the WPML interface/source language differs from the product catalog language.
 
 From version 1.2.0.24, existing WPML String Translation records for the `free_shipment_progressbar` text domain are synchronized to English (`en`) as source language in the WordPress admin. This prevents WPML from continuing to treat the plugin strings as Dutch source strings after scanning.
 
@@ -339,6 +341,21 @@ It reads:
 - `woocommerce_pos_settings_visibility` from the options table.
 
 Products or variations marked POS-only are excluded from frontend upsells.
+
+## Gift Card Behavior
+
+From version 2.1.0, gift cards are excluded from all free-shipping threshold logic.
+
+The plugin supports WPC Gift Cards for WooCommerce by detecting gift-card style product types and common gift-card metadata. Gift cards are:
+
+- excluded from the amount required for free shipping;
+- excluded from the progress-bar percentage;
+- excluded from source products and source categories for upsell matching;
+- excluded from frontend upsell products;
+- excluded from admin upsell product search results;
+- unable to trigger the free shipping bar when the cart contains only gift cards.
+
+The normal WooCommerce cart counter still shows the real cart quantity, including gift cards. Only the free-shipping and upsell logic excludes them.
 
 ## Security Notes
 
@@ -366,6 +383,8 @@ When enabled, the browser console can show:
 - Shipping zone/debug data.
 - Address source.
 - Cart counter updates.
+- Gift card totals excluded from the free shipping calculation.
+- Shipping-eligible cart totals after gift cards are excluded.
 
 Debug mode should normally be disabled on production.
 
@@ -388,13 +407,31 @@ Do not include historical zip files inside the installable zip.
 
 ## Changelog
 
+### 2.1.1 - 2026-09-05
+
+- Improved WPC Gift Cards for WooCommerce detection by checking technical `_wpcgc_*` product metadata instead of product names.
+- Kept WPC gift cards excluded from free-shipping progress totals, cart-source upsell matching, fallback upsells, and carousel products.
+- Added debug-only excluded cart item details with `excluded_reason: wpc_gift_card_meta` for WPC gift cards.
+
+### 2.1.0 - 2026-09-04
+
+- Added gift card exclusion for WPC Gift Cards for WooCommerce.
+- Excluded gift cards from free shipping threshold totals, progress percentages, and Store API shipping-rate overrides.
+- Excluded gift cards from upsell matching, fallback upsells, frontend carousel output, and admin product search results.
+- Added debug response fields for `eligible_cart_count`, `excluded_giftcard_count`, `excluded_giftcard_total`, and `has_only_giftcards`.
+- Kept the regular cart counter unchanged so it still reflects the actual WooCommerce cart quantity.
+
+### 2.0.2 - 2026-07-14
+
+- Kept the plugin string/rule source language as English (`en`).
+- Made admin product selectors follow the requested product language from `lang`.
+- Added `lang` to admin product search AJAX requests.
+- Added a hard WPML product-language check before admin product search results are returned.
+- Corrected the 2.0.1 behavior that was too specific to Dutch-only product catalogs.
+
 ### 2.0.1 - 2026-07-14
 
-- Changed the default WPML source language for upsell rules from `en` to `nl`.
-- Treats stale `en` source-language option values from version 2.0.0 as `nl` at runtime.
-- Forced the admin product search to query products in the configured source language.
-- Added a hard WPML language check before product search results are returned, preventing translated products from appearing in source-language upsell selectors.
-- Updated the admin source language notice to `Dutch (nl)`.
+- Superseded by 2.0.2 because this build incorrectly tied admin product search to a fixed Dutch product language.
 
 ### 2.0.0 - 2026-07-08
 

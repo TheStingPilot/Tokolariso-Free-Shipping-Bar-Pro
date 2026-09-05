@@ -518,20 +518,8 @@ function free_shipment_progressbar_get_source_language(){
     $language =
         get_option(
             'free_shipment_progressbar_wpml_source_language',
-            'nl'
+            'en'
         );
-
-    /*
-     * Version 2.0.0 briefly stored English as source language.
-     * This installation uses Dutch source products/categories, so migrate
-     * that stale value at runtime instead of waiting for an admin save.
-     */
-
-    if(
-        $language === 'en'
-    ){
-        $language = 'nl';
-    } // END if
 
     $language =
         apply_filters(
@@ -539,7 +527,7 @@ function free_shipment_progressbar_get_source_language(){
             $language
         );
 
-    return $language ? $language : 'nl';
+    return $language ? $language : 'en';
 } // END function free_shipment_progressbar_get_source_language()
 
 function free_shipment_progressbar_get_carousel_interval_seconds(){
@@ -783,6 +771,273 @@ function free_shipment_progressbar_is_wcpos_pos_only_product(
     return false;
 } // END function free_shipment_progressbar_is_wcpos_pos_only_product()
 
+function free_shipment_progressbar_get_giftcard_excluded_reason(
+    $product
+){
+
+    if(
+        !$product
+    ){
+        return '';
+    } // END if
+
+    $product_type =
+        method_exists($product, 'get_type')
+        ? strtolower((string) $product->get_type())
+        : '';
+
+    $giftcard_types = [
+        'giftcard',
+        'gift_card',
+        'wpc_gift_card',
+        'wgm_gift_card',
+        'pw-gift-card',
+        'yith_gift_card',
+    ];
+
+    if(
+        in_array($product_type, $giftcard_types, true)
+    ){
+        return 'giftcard_product_type';
+    } // END if
+
+    $product_id =
+        $product->get_id();
+
+    $parent_id =
+        $product->get_parent_id();
+
+    $product_ids =
+        array_values(
+            array_filter(
+                array_unique(
+                    array_map(
+                        'absint',
+                        [
+                            $product_id,
+                            $parent_id,
+                        ]
+                    )
+                )
+            )
+        );
+
+    $wpcgc_meta_keys = [
+        '_wpcgc_amounts',
+        '_wpcgc_header_images',
+        '_wpcgc_allow_custom',
+        '_wpcgc_individual_use',
+        '_wpcgc_allow_upload',
+        '_wpcgc_custom_min',
+        '_wpcgc_custom_max',
+        '_wpcgc_expires_days',
+    ];
+
+    foreach(
+        $product_ids as $meta_product_id
+    ){
+        foreach(
+            $wpcgc_meta_keys as $meta_key
+        ){
+            if(
+                metadata_exists(
+                    'post',
+                    $meta_product_id,
+                    $meta_key
+                )
+            ){
+                return 'wpc_gift_card_meta';
+            } // END if
+        } // END foreach
+    } // END foreach
+
+    foreach(
+        ['is_giftcard_product', 'is_gift_card_product'] as $callback
+    ){
+        if(
+            !function_exists($callback)
+        ){
+            continue;
+        } // END if
+
+        try {
+
+            if(
+                $callback($product)
+                ||
+                $callback($product_id)
+                ||
+                (
+                    $parent_id
+                    &&
+                    $callback($parent_id)
+                )
+            ){
+                return 'giftcard_callback';
+            } // END if
+        } catch (Throwable $error) {
+
+            continue;
+        } // END try/catch
+    } // END foreach
+
+    $meta_keys = [
+        '_giftcard',
+        '_gift_card',
+        '_wpc_gift_card',
+        '_wgm_giftcard',
+        '_wgm_gift_card',
+        'wpc_gift_card',
+        'wgm_giftcard',
+        'wgm_gift_card',
+    ];
+
+    foreach(
+        $product_ids as $meta_product_id
+    ){
+        foreach(
+            $meta_keys as $meta_key
+        ){
+            $value =
+                get_post_meta(
+                    $meta_product_id,
+                    $meta_key,
+                    true
+                );
+
+            if(
+                $value
+                &&
+                $value !== 'no'
+            ){
+                return 'giftcard_meta';
+            } // END if
+        } // END foreach
+    } // END foreach
+
+    return '';
+} // END function free_shipment_progressbar_get_giftcard_excluded_reason()
+
+function free_shipment_progressbar_is_giftcard_product(
+    $product
+){
+
+    return
+        free_shipment_progressbar_get_giftcard_excluded_reason($product)
+        !== '';
+} // END function free_shipment_progressbar_is_giftcard_product()
+
+function free_shipment_progressbar_get_debug_excluded_cart_items(){
+
+    if(
+        get_option('free_shipment_progressbar_debug', 'no') !== 'yes'
+        ||
+        !WC()->cart
+    ){
+        return [];
+    } // END if
+
+    $items = [];
+
+    foreach(
+        WC()->cart->get_cart() as $cart_item_key => $cart_item
+    ){
+        $product =
+            $cart_item['data'] ?? null;
+
+        $excluded_reason =
+            free_shipment_progressbar_get_giftcard_excluded_reason($product);
+
+        if(
+            $excluded_reason === ''
+        ){
+            continue;
+        } // END if
+
+        $items[] = [
+            'cart_item_key' => $cart_item_key,
+            'product_id' => absint($cart_item['product_id'] ?? 0),
+            'variation_id' => absint($cart_item['variation_id'] ?? 0),
+            'quantity' => absint($cart_item['quantity'] ?? 0),
+            'name' => $product ? $product->get_name() : '',
+            'excluded_reason' => $excluded_reason,
+        ];
+    } // END foreach
+
+    return $items;
+} // END function free_shipment_progressbar_get_debug_excluded_cart_items()
+
+function free_shipment_progressbar_get_shipping_eligible_cart_totals(){
+
+    $totals = [
+        'eligible_total' => 0.0,
+        'eligible_subtotal' => 0.0,
+        'eligible_subtotal_tax' => 0.0,
+        'excluded_giftcard_total' => 0.0,
+        'excluded_giftcard_subtotal' => 0.0,
+        'excluded_giftcard_subtotal_tax' => 0.0,
+        'eligible_cart_count' => 0,
+        'excluded_giftcard_count' => 0,
+        'has_only_giftcards' => false,
+    ];
+
+    if(
+        !WC()->cart
+    ){
+        return $totals;
+    } // END if
+
+    foreach(
+        WC()->cart->get_cart() as $cart_item
+    ){
+        $product =
+            $cart_item['data'] ?? null;
+
+        $quantity =
+            isset($cart_item['quantity'])
+            ? (int) $cart_item['quantity']
+            : 0;
+
+        $line_subtotal =
+            isset($cart_item['line_subtotal'])
+            ? (float) $cart_item['line_subtotal']
+            : 0.0;
+
+        $line_subtotal_tax =
+            isset($cart_item['line_subtotal_tax'])
+            ? (float) $cart_item['line_subtotal_tax']
+            : 0.0;
+
+        $line_total =
+            $line_subtotal
+            +
+            $line_subtotal_tax;
+
+        if(
+            free_shipment_progressbar_is_giftcard_product($product)
+        ){
+            $totals['excluded_giftcard_subtotal'] += $line_subtotal;
+            $totals['excluded_giftcard_subtotal_tax'] += $line_subtotal_tax;
+            $totals['excluded_giftcard_total'] += $line_total;
+            $totals['excluded_giftcard_count'] += max(0, $quantity);
+
+            continue;
+        } // END if
+
+        $totals['eligible_subtotal'] += $line_subtotal;
+        $totals['eligible_subtotal_tax'] += $line_subtotal_tax;
+        $totals['eligible_total'] += $line_total;
+        $totals['eligible_cart_count'] += max(0, $quantity);
+    } // END foreach
+
+    $totals['has_only_giftcards'] =
+        $totals['excluded_giftcard_count'] > 0
+        &&
+        $totals['eligible_cart_count'] <= 0;
+
+    return $totals;
+} // END function free_shipment_progressbar_get_shipping_eligible_cart_totals()
+
 function free_shipment_progressbar_get_cart_context(){
 
     $category_ids = [];
@@ -793,6 +1048,14 @@ function free_shipment_progressbar_get_cart_context(){
     ){
         $product_id = absint($cart_item['product_id'] ?? 0);
         $variation_id = absint($cart_item['variation_id'] ?? 0);
+        $product =
+            $cart_item['data'] ?? null;
+
+        if(
+            free_shipment_progressbar_is_giftcard_product($product)
+        ){
+            continue;
+        } // END if
 
         if(
             $product_id
@@ -855,6 +1118,7 @@ function free_shipment_progressbar_prepare_upsell_product(
 
     if(
         !$product
+        || free_shipment_progressbar_is_giftcard_product($product)
         || free_shipment_progressbar_is_wcpos_pos_only_product($product)
         || !$product->is_in_stock()
         || (float) $product->get_price() <= 0.01
@@ -953,6 +1217,17 @@ function free_shipment_progressbar_get_upsells(
     if(
         !WC()->cart
         || WC()->cart->is_empty()
+    ){
+        return [];
+    } // END if
+
+    $eligible_totals =
+        free_shipment_progressbar_get_shipping_eligible_cart_totals();
+
+    if(
+        !empty($eligible_totals['has_only_giftcards'])
+        ||
+        (int) $eligible_totals['eligible_cart_count'] <= 0
     ){
         return [];
     } // END if
@@ -1880,10 +2155,11 @@ function free_shipment_progressbar_force_wbsng_free_shipping(
         return $rates;
     } // END if
 
+    $eligible_totals =
+        free_shipment_progressbar_get_shipping_eligible_cart_totals();
+
     $total =
-        (float) WC()->cart->get_subtotal()
-        +
-        (float) WC()->cart->get_subtotal_tax();
+        (float) $eligible_totals['eligible_total'];
 
     if (
         $total < $minimum
@@ -4118,6 +4394,21 @@ if (DEBUG) {
         data.address_source
     );
 
+    console.log(
+        'ELIGIBLE CART COUNT:',
+        data.eligible_cart_count
+    );
+
+    console.log(
+        'EXCLUDED GIFTCARD COUNT:',
+        data.excluded_giftcard_count
+    );
+
+    console.log(
+        'EXCLUDED GIFTCARD TOTAL:',
+        data.excluded_giftcard_total
+    );
+
     console.groupEnd();
 	} // END if
 
@@ -5073,6 +5364,12 @@ $shipping_saving =
 $upsells =
     free_shipment_progressbar_get_upsells(15);
 
+$eligible_totals =
+    free_shipment_progressbar_get_shipping_eligible_cart_totals();
+
+$debug_excluded_cart_items =
+    free_shipment_progressbar_get_debug_excluded_cart_items();
+
 	/*
  * Geen gratis verzending beschikbaar?
  */
@@ -5088,10 +5385,14 @@ if(
         'show_progress' => false,
         'percent' => 0,
         'message' => '',
-        'total' => WC()->cart->get_subtotal() + WC()->cart->get_subtotal_tax(),
+        'total' => $eligible_totals['eligible_total'],
         'minimum' => 0,
         'remaining' => 0,
         'cart_count' => WC()->cart->get_cart_contents_count(),
+        'eligible_cart_count' => $eligible_totals['eligible_cart_count'],
+        'excluded_giftcard_count' => $eligible_totals['excluded_giftcard_count'],
+        'excluded_giftcard_total' => $eligible_totals['excluded_giftcard_total'],
+        'has_only_giftcards' => $eligible_totals['has_only_giftcards'],
         'address_source' => $address_source,
         'address' => [
             'country' => $country,
@@ -5100,32 +5401,44 @@ if(
         ],
         'upsells' => $upsells,
         'debug_shipping_data' => $shipping_data,
+        'debug_excluded_cart_items' => $debug_excluded_cart_items,
     ]);
 
     return;
 } // END if
 
-    /*
-     * Cart totals
-     */
-
-    $totals =
-        WC()->cart->get_totals();
-
-    $subtotal =
-        isset($totals['subtotal'])
-        ? (float) $totals['subtotal']
-        : 0;
-
-    $subtotal_tax =
-        isset($totals['subtotal_tax'])
-        ? (float) $totals['subtotal_tax']
-        : 0;
-
     $total =
-        $subtotal
-        +
-        $subtotal_tax;
+        (float) $eligible_totals['eligible_total'];
+
+    if(
+        (int) $eligible_totals['eligible_cart_count'] <= 0
+    ){
+        wp_send_json([
+            'show' => false,
+            'show_progress' => false,
+            'percent' => 0,
+            'message' => '',
+            'total' => 0,
+            'minimum' => (float) $shipping_data['minimum'],
+            'remaining' => 0,
+            'cart_count' => WC()->cart->get_cart_contents_count(),
+            'eligible_cart_count' => 0,
+            'excluded_giftcard_count' => $eligible_totals['excluded_giftcard_count'],
+            'excluded_giftcard_total' => $eligible_totals['excluded_giftcard_total'],
+            'has_only_giftcards' => $eligible_totals['has_only_giftcards'],
+            'address_source' => $address_source,
+            'address' => [
+                'country' => $country,
+                'postcode' => $postcode,
+                'city' => $city,
+            ],
+            'upsells' => [],
+            'debug_shipping_data' => $shipping_data,
+            'debug_excluded_cart_items' => $debug_excluded_cart_items,
+        ]);
+
+        return;
+    } // END if
 
     /*
      * Minimum
@@ -5654,6 +5967,10 @@ wp_send_json([
     'remaining' => $remaining,
     'shipping_saving' => $shipping_saving,
     'cart_count' => WC()->cart->get_cart_contents_count(),
+    'eligible_cart_count' => $eligible_totals['eligible_cart_count'],
+    'excluded_giftcard_count' => $eligible_totals['excluded_giftcard_count'],
+    'excluded_giftcard_total' => $eligible_totals['excluded_giftcard_total'],
+    'has_only_giftcards' => $eligible_totals['has_only_giftcards'],
     'address_source' => $address_source,
     'address' => [
         'country' => $country,
@@ -5666,7 +5983,8 @@ wp_send_json([
      * DEBUG
      */
 
-    'debug_shipping_data' => $shipping_data
+    'debug_shipping_data' => $shipping_data,
+    'debug_excluded_cart_items' => $debug_excluded_cart_items
 ]);
 } // END function free_shipment_progressbar_get_free_shipping_progress()
 
@@ -5852,10 +6170,11 @@ function free_shipment_progressbar_fix_store_api_shipping_rates(
         free_shipment_progressbar_get_shipping_data()['minimum']
         ?? 0;
 
+    $eligible_totals =
+        free_shipment_progressbar_get_shipping_eligible_cart_totals();
+
     $total =
-        WC()->cart->get_subtotal()
-        +
-        WC()->cart->get_subtotal_tax();
+        (float) $eligible_totals['eligible_total'];
 
     $is_free =
         $minimum > 0
