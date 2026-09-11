@@ -786,10 +786,17 @@ function free_shipment_progressbar_get_giftcard_excluded_reason(
         ? strtolower((string) $product->get_type())
         : '';
 
+    if(
+        $product_type === 'tokolarisogiftcard'
+    ){
+        return 'tokolariso_giftcard_product_type';
+    } // END if
+
     $giftcard_types = [
         'giftcard',
         'gift_card',
         'wpc_gift_card',
+        'wxgiftcard',
         'wgm_gift_card',
         'pw-gift-card',
         'yith_gift_card',
@@ -884,9 +891,12 @@ function free_shipment_progressbar_get_giftcard_excluded_reason(
     $meta_keys = [
         '_giftcard',
         '_gift_card',
+        '_tokolariso_is_giftcard',
+        '_tokolariso_giftcard_amount',
         '_wpc_gift_card',
         '_wgm_giftcard',
         '_wgm_gift_card',
+        'tokolariso_giftcard',
         'wpc_gift_card',
         'wgm_giftcard',
         'wgm_gift_card',
@@ -927,6 +937,39 @@ function free_shipment_progressbar_is_giftcard_product(
         !== '';
 } // END function free_shipment_progressbar_is_giftcard_product()
 
+function free_shipment_progressbar_get_giftcard_cart_item_excluded_reason(
+    $cart_item
+){
+
+    if(
+        !is_array($cart_item)
+    ){
+        return '';
+    } // END if
+
+    if(
+        !empty($cart_item['tokolariso_giftcard'])
+        &&
+        is_array($cart_item['tokolariso_giftcard'])
+    ){
+        return 'tokolariso_giftcard_cart_item';
+    } // END if
+
+    $product =
+        $cart_item['data'] ?? null;
+
+    return free_shipment_progressbar_get_giftcard_excluded_reason($product);
+} // END function free_shipment_progressbar_get_giftcard_cart_item_excluded_reason()
+
+function free_shipment_progressbar_is_giftcard_cart_item(
+    $cart_item
+){
+
+    return
+        free_shipment_progressbar_get_giftcard_cart_item_excluded_reason($cart_item)
+        !== '';
+} // END function free_shipment_progressbar_is_giftcard_cart_item()
+
 function free_shipment_progressbar_get_debug_excluded_cart_items(){
 
     if(
@@ -946,7 +989,7 @@ function free_shipment_progressbar_get_debug_excluded_cart_items(){
             $cart_item['data'] ?? null;
 
         $excluded_reason =
-            free_shipment_progressbar_get_giftcard_excluded_reason($product);
+            free_shipment_progressbar_get_giftcard_cart_item_excluded_reason($cart_item);
 
         if(
             $excluded_reason === ''
@@ -1014,7 +1057,7 @@ function free_shipment_progressbar_get_shipping_eligible_cart_totals(){
             $line_subtotal_tax;
 
         if(
-            free_shipment_progressbar_is_giftcard_product($product)
+            free_shipment_progressbar_is_giftcard_cart_item($cart_item)
         ){
             $totals['excluded_giftcard_subtotal'] += $line_subtotal;
             $totals['excluded_giftcard_subtotal_tax'] += $line_subtotal_tax;
@@ -1052,7 +1095,7 @@ function free_shipment_progressbar_get_cart_context(){
             $cart_item['data'] ?? null;
 
         if(
-            free_shipment_progressbar_is_giftcard_product($product)
+            free_shipment_progressbar_is_giftcard_cart_item($cart_item)
         ){
             continue;
         } // END if
@@ -2115,6 +2158,83 @@ function free_shipment_progressbar_get_shipping_saving_amount(
     return $lowest_amount;
 } // END function free_shipment_progressbar_get_shipping_saving_amount()
 
+function free_shipment_progressbar_should_remove_native_free_shipping(
+    $minimum,
+    $eligible_totals
+){
+
+    $minimum =
+        (float) $minimum;
+
+    if(
+        $minimum <= 0
+        ||
+        empty($eligible_totals['excluded_giftcard_total'])
+    ){
+        return false;
+    } // END if
+
+    $eligible_total =
+        (float) ($eligible_totals['eligible_total'] ?? 0);
+
+    $excluded_giftcard_total =
+        (float) ($eligible_totals['excluded_giftcard_total'] ?? 0);
+
+    return
+        $eligible_total < $minimum
+        &&
+        ($eligible_total + $excluded_giftcard_total) >= $minimum;
+} // END function free_shipment_progressbar_should_remove_native_free_shipping()
+
+function free_shipment_progressbar_is_native_free_shipping_rate(
+    $rate,
+    $rate_id = ''
+){
+
+    if(
+        $rate instanceof WC_Shipping_Rate
+    ){
+        return $rate->get_method_id() === 'free_shipping';
+    } // END if
+
+    if(
+        !is_array($rate)
+    ){
+        return false;
+    } // END if
+
+    $method_id =
+        (string) ($rate['method_id'] ?? '');
+
+    $store_api_rate_id =
+        (string) ($rate['rate_id'] ?? $rate_id);
+
+    return
+        $method_id === 'free_shipping'
+        ||
+        strpos($store_api_rate_id, 'free_shipping:') === 0;
+} // END function free_shipment_progressbar_is_native_free_shipping_rate()
+
+function free_shipment_progressbar_remove_native_free_shipping_rates(
+    $rates,
+    $reindex = false
+){
+
+    foreach(
+        $rates as $rate_id => $rate
+    ){
+        if(
+            free_shipment_progressbar_is_native_free_shipping_rate($rate, $rate_id)
+        ){
+            unset($rates[$rate_id]);
+        } // END if
+    } // END foreach
+
+    return $reindex
+        ? array_values($rates)
+        : $rates;
+} // END function free_shipment_progressbar_remove_native_free_shipping_rates()
+
 
 /* =========================================================
  * FILTER SHIPPING RATES
@@ -2164,6 +2284,16 @@ function free_shipment_progressbar_force_wbsng_free_shipping(
     if (
         $total < $minimum
     ) {
+        if(
+            free_shipment_progressbar_should_remove_native_free_shipping(
+                $minimum,
+                $eligible_totals
+            )
+        ){
+            $rates =
+                free_shipment_progressbar_remove_native_free_shipping_rates($rates);
+        } // END if
+
         return $rates;
     } // END if
 
@@ -6184,6 +6314,31 @@ function free_shipment_progressbar_fix_store_api_shipping_rates(
     if (
         !$is_free
     ) {
+        if(
+            free_shipment_progressbar_should_remove_native_free_shipping(
+                $minimum,
+                $eligible_totals
+            )
+        ){
+            foreach(
+                $shipping_rates as &$package
+            ){
+                if(
+                    empty($package['shipping_rates'])
+                    ||
+                    !is_array($package['shipping_rates'])
+                ){
+                    continue;
+                } // END if
+
+                $package['shipping_rates'] =
+                    free_shipment_progressbar_remove_native_free_shipping_rates(
+                        $package['shipping_rates'],
+                        true
+                    );
+            } // END foreach
+        } // END if
+
         return $shipping_rates;
     } // END if
 

@@ -2,7 +2,7 @@
 
 Technical documentation for the WooCommerce plugin **Free Shipping and Progressbar PRO**.
 
-Current plugin version: `2.1.1`
+Current plugin version: `2.1.3`
 
 ## Purpose
 
@@ -26,6 +26,7 @@ The plugin also adds a WooCommerce admin page where upsell rules can be managed 
 - Rule priorities.
 - Fallback upsells when no rule-based upsell products are found.
 - Product and variation filtering for stock, price, WCPOS POS-only visibility, and gift card products.
+- Excludes Toko Lariso giftcard purchases from free-shipping threshold totals.
 - WooCommerce Cart and Checkout Blocks support.
 - Classic WooCommerce cart and checkout fallback support.
 - Sydney theme cart counter synchronization.
@@ -57,6 +58,7 @@ wp-content/plugins/free-shipping-and-progressbar-pro/
             menu.php
             settings.php
     README.md
+    technical.md
 ```
 
 Activate **Free Shipping and Progressbar PRO** in WordPress Admin > Plugins.
@@ -92,6 +94,12 @@ assets/js/
 ```
 
 Historical asset files from the external JavaScript refactor. The stable frontend implementation currently lives inline in `includes/free-shipping-bar.php`.
+
+```text
+technical.md
+```
+
+Technical architecture and integration notes for maintainers.
 
 ## WordPress Hooks
 
@@ -346,14 +354,22 @@ Products or variations marked POS-only are excluded from frontend upsells.
 
 From version 2.1.0, gift cards are excluded from all free-shipping threshold logic.
 
-The plugin supports WPC Gift Cards for WooCommerce by detecting gift-card style product types and common gift-card metadata. Gift cards are:
+The plugin supports WPC Gift Cards for WooCommerce by detecting gift-card style product types and common gift-card metadata.
+
+From version 2.1.3, it also explicitly supports **Toko Lariso Giftcards**. Products with type `tokolarisogiftcard` and cart items carrying `tokolariso_giftcard` purchase data are treated as giftcards for this plugin.
+
+Gift cards are:
 
 - excluded from the amount required for free shipping;
 - excluded from the progress-bar percentage;
+- prevented from making native WooCommerce `free_shipping` available when the regular merchandise total is still below the threshold;
+- excluded from the Store API shipping-rate override that makes WBSNG rates free after the threshold;
 - excluded from source products and source categories for upsell matching;
 - excluded from frontend upsell products;
 - excluded from admin upsell product search results;
 - unable to trigger the free shipping bar when the cart contains only gift cards.
+
+The free-shipping calculation is based on shipping-eligible merchandise only. For example, if the free shipping threshold is EUR 50 and the cart contains EUR 25 of regular products plus a EUR 50 giftcard purchase, the progress total is EUR 25, not EUR 75.
 
 The normal WooCommerce cart counter still shows the real cart quantity, including gift cards. Only the free-shipping and upsell logic excludes them.
 
@@ -401,11 +417,24 @@ free-shipping-and-progressbar-pro/
             menu.php
             settings.php
     README.md
+    technical.md
 ```
 
 Do not include historical zip files inside the installable zip.
 
 ## Changelog
+
+### 2.1.3 - 2026-09-11
+
+- Added explicit support for the Toko Lariso Giftcards product type `tokolarisogiftcard`.
+- Excluded cart items containing `tokolariso_giftcard` purchase data from free-shipping threshold totals.
+- Removed native WooCommerce `free_shipping` rates when only excluded giftcard value makes the raw cart total reach the threshold.
+- Documented that giftcard purchases do not count toward free delivery eligibility.
+
+### 2.1.2 - 2026-09-10
+
+- Excluded products with WooCommerce product type `wxgiftcard` from free-shipping progress totals and upsell logic.
+- Kept the existing WPC gift card metadata detection and other gift-card fallback checks unchanged.
 
 ### 2.1.1 - 2026-09-05
 

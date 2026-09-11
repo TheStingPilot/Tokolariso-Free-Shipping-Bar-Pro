@@ -3,7 +3,7 @@
  * Plugin Name: Free Shipping and Progressbar PRO
  * Plugin URI: https://github.com/TheStingPilot/Tokolariso-Free-Shipping-Bar-Pro
  * Description: Free shipping bar + smart upsells + WooCommerce Blocks support.
- * Version: 2.1.1
+ * Version: 2.1.3
  * Author: TheStingPilot and Codex
  * WPML Text Domain: free_shipment_progressbar
  */
